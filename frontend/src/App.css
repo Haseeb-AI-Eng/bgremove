@@ -1,0 +1,210 @@
+/* App.css - Main application styles */
+
+/* App-specific layout styles */
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Main content area */
+.main-content {
+  flex: 1;
+  padding: 1rem;
+}
+
+/* Responsive adjustments for the app */
+@media (min-width: 768px) {
+  .main-content {
+    padding: 2rem;
+  }
+}
+
+/* Global styles that are specific to the app structure */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Add any additional app-wide styles here */
+
+/* Cloud speech bubble styles */
+.cloud-speech-bubble {
+  position: relative;
+  background: radial-gradient(ellipse at top, rgba(219, 234, 254, 0.8), rgba(224, 231, 254, 1));
+  border-radius: 25px;
+  border: 2px solid #c7d2fe;
+  box-shadow: 0 10px 25px -5px rgba(165, 180, 252, 0.2), 0 8px 10px -6px rgba(165, 180, 252, 0.2);
+  display: inline-block;
+  max-width: 280px;
+  padding: 12px 16px;
+}
+
+.thought-bubble {
+  position: relative;
+  background: radial-gradient(ellipse at top, rgba(255, 255, 255, 0.9), rgba(240, 249, 255, 1));
+  border-radius: 25px;
+  border: 2px solid #93c5fd;
+  box-shadow: 0 4px 12px rgba(147, 197, 253, 0.3);
+  display: inline-block;
+  max-width: 280px;
+  padding: 12px 16px;
+}
+
+.thought-bubble::before {
+  content: "";
+  position: absolute;
+  bottom: -12px;
+  left: 40%;
+  width: 12px;
+  height: 12px;
+  background: #dbeafe;
+  border: 2px solid #93c5fd;
+  border-radius: 50%;
+}
+
+.thought-bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -22px;
+  left: 35%;
+  width: 8px;
+  height: 8px;
+  background: #dbeafe;
+  border: 2px solid #93c5fd;
+  border-radius: 50%;
+}
+
+.cloud-puff {
+  position: absolute;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  border: 1px solid #a5b4fc;
+}
+
+/* Animation for the moving line in the hero circle */
+@keyframes moveLine {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-moveLine {
+  animation: moveLine 4s ease-in-out infinite;
+}
+
+/* Fast moving line animation */
+@keyframes moveLineFast {
+  0% {
+    transform: translateX(0%);
+    box-shadow: 0 0 15px 8px rgba(255, 255, 255, 0.8);
+  }
+  50% {
+    transform: translateX(100%);
+    box-shadow: 0 0 15px 8px rgba(255, 255, 255, 0.8);
+  }
+  100% {
+    transform: translateX(0%);
+    box-shadow: 0 0 15px 8px rgba(255, 255, 255, 0.8);
+  }
+}
+
+.animate-moveLineFast {
+  animation: moveLineFast 4s linear infinite;
+  width: 2px;
+  background: white;
+}
+
+/* Gradient animation that follows the line */
+@keyframes moveGradient {
+  0% {
+    transform: translateX(0%);
+    opacity: 0.1;
+  }
+  50% {
+    transform: translateX(100%);
+    opacity: 0.1;
+  }
+  100% {
+    transform: translateX(0%);
+    opacity: 0.1;
+  }
+}
+
+.animate-moveGradient {
+  animation: moveGradient 4s linear infinite;
+}
+
+/* Sweep gradient animation */
+@keyframes sweepGradient {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-sweepGradient {
+  animation: sweepGradient 4s linear infinite;
+}
+
+/* Electrical spark animations */
+@keyframes electricSpark {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes electricSpark2 {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes electricSpark3 {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes electricSpark4 {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.3; }
+}
+
+.animate-electricSpark {
+  animation: electricSpark 2s ease-in-out infinite;
+}
+
+.animate-electricSpark2 {
+  animation: electricSpark2 2.5s ease-in-out infinite 0.5s;
+}
+
+.animate-electricSpark3 {
+  animation: electricSpark3 3s ease-in-out infinite 1s;
+}
+
+.animate-electricSpark4 {
+  animation: electricSpark4 3.5s ease-in-out infinite 1.5s;
+}
