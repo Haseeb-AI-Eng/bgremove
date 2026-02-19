@@ -1,4 +1,5 @@
-FROM python:3.11-slim
+# Use Debian-based Python image (more compatible than slim)
+FROM python:3.11-bullseye
 
 # Set working directory
 WORKDIR /app
@@ -14,6 +15,8 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 
 # Install Python dependencies
+# Force CPU-only ONNX runtime to avoid executable stack issue
+RUN pip install --no-cache-dir onnxruntime==1.16.3
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
