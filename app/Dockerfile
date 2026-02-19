@@ -2,13 +2,14 @@ FROM python:3.11-slim-bullseye
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies required by OpenCV and rembg
 RUN apt-get update && apt-get install -y \
+    libglib2.0-0 \
+    libgthread-2.0-0 \
     libsm6 \
     libxext6 \
     libxrender-dev \
-    libgl1-mesa-glx \
-    libgomp1 \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements
