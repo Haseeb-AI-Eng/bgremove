@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FaBars, FaTimes, FaUser, FaLock, FaSignOutAlt, FaHome, FaWrench, FaTags, FaTachometerAlt, FaFileImage, FaRobot, FaGlobe } from 'react-icons/fa';
+import { FaBars, FaTimes, FaUser, FaLock, FaSignOutAlt, FaHome, FaWrench, FaTags, FaTachometerAlt, FaFileImage, FaRobot, FaGlobe, FaEraser, FaImage } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -47,9 +47,14 @@ const Layout = ({ children }) => {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             {/* Logo on the far left */}
-            <Link to="/" className="flex items-center space-x-2">
-              <img src="/jju.png" alt="AI Solutions Logo" className="w-8 h-8 object-contain" />
-              <span className="text-xl font-bold text-gray-900 hidden md:block">
+            <Link to="/" className="flex items-center space-x-2 group">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-lg blur-sm opacity-70 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500 p-2 rounded-lg">
+                  <FaEraser className="text-white w-5 h-5" />
+                </div>
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-cyan-600 via-purple-600 to-pink-600 bg-clip-text text-transparent hidden md:block">
                 {t('brandName')}
               </span>
             </Link>
@@ -262,8 +267,13 @@ const Layout = ({ children }) => {
             {/* Brand */}
             <div className="col-span-1 md:col-span-1">
               <div className="flex items-center space-x-2 mb-4">
-                <img src="/jju.png" alt="AI Solutions Logo" className="w-8 h-8 object-contain" />
-                <span className="text-lg font-bold text-gray-900">{t('brandName')}</span>
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-lg blur-sm opacity-70"></div>
+                  <div className="relative bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500 p-2 rounded-lg">
+                    <FaEraser className="text-white w-5 h-5" />
+                  </div>
+                </div>
+                <span className="text-lg font-bold bg-gradient-to-r from-cyan-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">{t('brandName')}</span>
               </div>
               <p className="text-gray-600 text-sm">
                 {t('worldClassAISolutions')}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
-import { FaMagic, FaFileAlt, FaPalette, FaEye, FaRocket, FaShieldAlt, FaChartLine, FaGlobe } from 'react-icons/fa';
+import { FaMagic, FaFileAlt, FaPalette, FaEye, FaRocket, FaShieldAlt, FaChartLine, FaGlobe, FaEraser } from 'react-icons/fa';
 import ServiceCard from '../components/ServiceCard';
 import ImageEditorModal from '../components/ImageEditorModal';
 
@@ -62,53 +62,30 @@ const HomePage = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section
-        className="relative bg-cover bg-center bg-no-repeat min-h-screen flex items-center justify-center hero-section"
-        style={{
-          backgroundImage: "url('/jju.png')",
-          backgroundSize: "30%",
-          backgroundPosition: "center 30%"
-        }}
-      >
-        {/* Dark gradient overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-50 z-0"></div>
-
+      <section className="relative min-h-screen flex items-center justify-center hero-section animated-gradient-bg">
         {/* Content */}
         <div className="container mx-auto px-4 relative z-10">
-          <div className="flex flex-col lg:flex-row items-center justify-between">
-            <div className="lg:w-1/2 text-center lg:text-left mb-8 lg:mb-0">
-              <h1 className="text-4xl md:text-6xl font-bold mb-6 text-white animate-fade-in">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-pink-400">{t('imageProcessingSuite')}</span>
-              </h1>
-              <p className="text-xl md:text-2xl mb-8 max-w-3xl text-white">
-                {t('worldClassAISolutions')}
-              </p>
-              <Link
-                to="/services/image-processing"
-                className="bg-white text-indigo-900 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors shadow-lg text-center inline-block"
-              >
-                {t('removeWatermark')}
-              </Link>
-            </div>
-            <div className="lg:w-1/2 flex justify-center">
+          <div className="text-center max-w-4xl mx-auto">
+            <div className="inline-block mb-6">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full opacity-20 animate-pulse"></div>
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-pink-400 rounded-full animate-spin" style={{ animationDuration: '20s', opacity: '0.1' }}></div>
-                <div className="relative rounded-full w-64 h-64 md:w-80 md:h-80 overflow-hidden border-4 border-white shadow-xl">
-                  <img
-                    src="/jju.png"
-                    alt="Hintergrudfen Logo"
-                    className="w-full h-full object-contain pt-4"
-                  />
-                  <div className="absolute top-0 left-0 h-full w-1 bg-white opacity-80 animate-moveLineFast"></div>
-                  <div className="absolute top-0 left-0 h-full w-full bg-gradient-to-r from-transparent via-white to-transparent opacity-10 animate-moveGradient"></div>
-                  <div className="absolute top-0 left-0 w-full h-full rounded-full border-t border-white opacity-30 animate-electricSpark"></div>
-                  <div className="absolute top-0 left-0 w-full h-full rounded-full border-r border-white opacity-30 animate-electricSpark2"></div>
-                  <div className="absolute top-0 left-0 w-full h-full rounded-full border-b border-white opacity-30 animate-electricSpark3"></div>
-                  <div className="absolute top-0 left-0 w-full h-full rounded-full border-l border-white opacity-30 animate-electricSpark4"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-2xl blur-xl opacity-50 animate-gradient-shift"></div>
+                <div className="relative bg-white/10 backdrop-blur-sm p-6 rounded-2xl border border-white/20">
+                  <FaEraser className="text-6xl text-white" />
                 </div>
               </div>
             </div>
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fade-in">
+              <span className="text-gray-100 font-semibold tracking-wide drop-shadow-2xl" style={{ textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.3)' }}>{t('imageProcessingSuite')}</span>
+            </h1>
+            <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90 font-light drop-shadow">
+              {t('worldClassAISolutions')}
+            </p>
+            <Link
+              to="/services/image-processing"
+              className="bg-gradient-to-r from-rose-600 via-pink-600 to-rose-600 backdrop-blur-sm border-2 border-white/30 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:from-rose-500 hover:via-pink-500 hover:to-rose-500 transition-all shadow-2xl hover:shadow-pink-500/60 hover:scale-105 inline-block"
+            >
+              {t('removeWatermark')}
+            </Link>
           </div>
         </div>
       </section>
@@ -195,13 +172,13 @@ const HomePage = () => {
       </section>
 
       {/* Services Showcase */}
-      <section className="py-16 bg-white services-showcase">
+      <section className="py-16 services-showcase shiny-cards-container">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 drop-shadow-lg">
               {t('aiAutoAgent')}
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-white/90 max-w-2xl mx-auto text-lg">
               {t('exploreOurSuite')}
             </p>
           </div>

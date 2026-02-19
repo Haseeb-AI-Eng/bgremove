@@ -296,3 +296,137 @@ h1, h2, h3, h4, h5, h6 {
     height: 300px;
   }
 }
+
+/* Animated gradient background for hero section */
+.animated-gradient-bg {
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab, #6366f1, #8b5cf6, #ec4899);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Shiny cards container with animated gradient */
+.shiny-cards-container {
+  position: relative;
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 25%, #4c1d95 50%, #581c87 75%, #1e1b4b 100%);
+  background-size: 200% 200%;
+  animation: gradientFlow 10s ease infinite;
+  overflow: hidden;
+}
+
+.shiny-cards-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%);
+  animation: shimmerMove 8s linear infinite;
+  pointer-events: none;
+}
+
+.shiny-cards-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    45deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.05) 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.05) 75%,
+    transparent 100%
+  );
+  background-size: 200% 200%;
+  animation: shineFlow 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes shimmerMove {
+  0% {
+    transform: rotate(0deg) translate(0, 0);
+  }
+  50% {
+    transform: rotate(180deg) translate(50px, 50px);
+  }
+  100% {
+    transform: rotate(360deg) translate(0, 0);
+  }
+}
+
+@keyframes shineFlow {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Gradient shift animation for elements */
+.animate-gradient-shift {
+  animation: gradientShift 8s ease infinite;
+}
+
+/* Enhanced service card styling */
+.shiny-cards-container .service-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.shiny-cards-container .service-card:hover {
+  transform: translateY(-12px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(139, 92, 246, 0.3), 0 0 60px rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.5);
+}
+
+/* Glass morphism effect */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Floating animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}

@@ -14,9 +14,9 @@ const translations = {
     gallery: 'Gallery',
     autoAgent: 'Agent',
     apiDashboard: 'API',
-    
+
     // Services
-    imageProcessingSuite: 'Image Processing Suite',
+    imageProcessingSuite: 'Change Background Now',
     aiCvGenerator: 'AI CV Generator',
     colorPaletteGenerator: 'Color Palette Generator',
     objectDetectionTool: 'Object Detection Tool',
@@ -243,9 +243,9 @@ const translations = {
     gallery: 'Galería',
     autoAgent: 'Agente',
     apiDashboard: 'API',
-    
+
     // Services
-    imageProcessingSuite: 'Suite de Procesamiento de Imágenes',
+    imageProcessingSuite: 'Cambiar Fondo Ahora',
     aiCvGenerator: 'Generador de CV con IA',
     colorPaletteGenerator: 'Generador de Paleta de Colores',
     objectDetectionTool: 'Herramienta de Detección de Objetos',
@@ -472,9 +472,9 @@ const translations = {
     gallery: 'Galerie',
     autoAgent: 'Agent',
     apiDashboard: 'API',
-    
+
     // Services
-    imageProcessingSuite: 'Bildverarbeitungs-Suite',
+    imageProcessingSuite: 'Hintergrund jetzt ändern',
     aiCvGenerator: 'KI Lebenslauf-Generator',
     colorPaletteGenerator: 'Farbpaletten-Generator',
     objectDetectionTool: 'Objekterkennung-Tool',
@@ -704,7 +704,8 @@ export const useLanguage = () => {
 export const LanguageProvider = ({ children }) => {
   const [language, setLanguage] = useState(() => {
     // Get language from localStorage or default to 'de' (German)
-    return localStorage.getItem('language') || 'de';
+    const savedLanguage = localStorage.getItem('language');
+    return savedLanguage || 'de';
   });
 
   // Update localStorage when language changes
