@@ -1,17 +1,23 @@
 import React, { useState } from 'react';
-import { FaUpload, FaDownload, FaMagic, FaTrash, FaEye, FaPalette } from 'react-icons/fa';
+import { FaUpload, FaDownload, FaMagic, FaTrash, FaEye, FaPalette, FaUserLock, FaTimes } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import { useAuth } from '../../contexts/AuthContext';
 
 const ImageProcessingPage = () => {
+  const { isAuthenticated } = useAuth();
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedBackgroundFile, setSelectedBackgroundFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [backgroundPreviewUrl, setBackgroundPreviewUrl] = useState(null);
   const [resultUrl, setResultUrl] = useState(null);
+  const [resultUrlNoWatermark, setResultUrlNoWatermark] = useState(null);
   const [loading, setLoading] = useState(false);
   const [processingType, setProcessingType] = useState('remove-background');
   const [backgroundColor, setBackgroundColor] = useState('#ffffff'); // Default to white
+  const [passportPhoto, setPassportPhoto] = useState(false);
+  const [passportBgColor, setPassportBgColor] = useState('blue');
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -54,6 +60,8 @@ const ImageProcessingPage = () => {
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
+      formData.append('passport_photo', passportPhoto);
+      formData.append('passport_bg', passportBgColor);
 
       let endpoint;
       switch (processingType) {
@@ -88,6 +96,38 @@ const ImageProcessingPage = () => {
       // Create a URL for the processed image blob
       const imageUrl = URL.createObjectURL(response.data);
       setResultUrl(imageUrl);
+
+      // If user is logged in, also get the version without watermark
+      if (isAuthenticated) {
+        // Request watermark removal by sending the processed image (which has watermark)
+        // First, convert the blob to a File object
+        const processedBlob = response.data;
+        const processedFile = new File([processedBlob], 'processed.png', { type: 'image/png' });
+        
+        const watermarkRemovalFormData = new FormData();
+        watermarkRemovalFormData.append('file', processedFile); // Send the processed image with watermark
+
+        try {
+          const noWatermarkResponse = await axios.post(
+            '/api/watermark-removal',
+            watermarkRemovalFormData,
+            {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+              },
+              responseType: 'blob',
+            }
+          );
+          const noWatermarkUrl = URL.createObjectURL(noWatermarkResponse.data);
+          setResultUrlNoWatermark(noWatermarkUrl);
+          console.log('Watermark-free version obtained successfully');
+        } catch (error) {
+          console.error('Error getting watermark-free version:', error);
+          console.error('Error response:', error.response);
+          toast.error('Failed to get watermark-free version. Please try again.');
+        }
+      }
+      
       toast.success('Image processed successfully!');
     } catch (error) {
       console.error('Error processing image:', error);
@@ -97,11 +137,12 @@ const ImageProcessingPage = () => {
     }
   };
 
-  const handleDownload = () => {
-    if (resultUrl) {
+  const handleDownload = (noWatermark = false) => {
+    const urlToDownload = noWatermark ? resultUrlNoWatermark : resultUrl;
+    if (urlToDownload) {
       const link = document.createElement('a');
-      link.href = resultUrl;
-      link.download = 'processed-image.png';
+      link.href = urlToDownload;
+      link.download = noWatermark ? 'processed-image-no-watermark.png' : 'processed-image.png';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -114,6 +155,7 @@ const ImageProcessingPage = () => {
     setPreviewUrl(null);
     setBackgroundPreviewUrl(null);
     setResultUrl(null);
+    setResultUrlNoWatermark(null);
     document.getElementById('file-input').value = '';
     const backgroundFileInput = document.getElementById('background-file-input');
     if (backgroundFileInput) {
@@ -163,6 +205,34 @@ const ImageProcessingPage = () => {
                   </label>
                 ))}
               </div>
+            </div>
+
+            {/* Passport Photo Size Option */}
+            <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <label className="flex items-start">
+                <input
+                  type="checkbox"
+                  checked={passportPhoto}
+                  onChange={(e) => setPassportPhoto(e.target.checked)}
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 mt-1"
+                />
+                <div className="ml-3">
+                  <span className="block text-sm font-medium text-gray-900">
+                    Transform to Passport Photo Size
+                  </span>
+                  <span className="block text-xs text-gray-600">
+                    Convert to standard passport photo dimensions (35x45mm) with colored background
+                  </span>
+                </div>
+              </label>
+              
+              {passportPhoto && (
+                <div className="mt-3 ml-7">
+                  <p className="text-sm text-gray-600">
+                    Default background color will be applied for passport photo
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Original Image Upload */}
@@ -288,7 +358,7 @@ const ImageProcessingPage = () => {
           {/* Result Preview */}
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h2 className="text-2xl font-semibold text-gray-900 mb-6">Result</h2>
-            
+
             {resultUrl ? (
               <div className="space-y-6">
                 <div>
@@ -308,16 +378,56 @@ const ImageProcessingPage = () => {
 
                 <div className="flex flex-wrap gap-3">
                   <button
-                    onClick={handleDownload}
+                    onClick={() => handleDownload(false)}
                     className="btn btn-primary flex-1 min-w-[120px]"
                   >
                     <FaDownload className="mr-2" /> Download
                   </button>
 
-                  <button className="btn btn-outline flex-1 min-w-[120px]">
+                  <button 
+                    onClick={() => setShowPreviewModal(true)}
+                    className="btn btn-outline flex-1 min-w-[120px]"
+                  >
                     <FaEye className="mr-2" /> Preview
                   </button>
                 </div>
+
+                {/* Watermark-free download for logged-in users */}
+                {isAuthenticated && resultUrlNoWatermark && (
+                  <div className="pt-4 border-t border-gray-200">
+                    <div className="flex items-center gap-2 mb-3">
+                      <FaUserLock className="text-green-600" />
+                      <span className="text-sm font-medium text-gray-700">
+                        Premium Download (No Watermark)
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 gap-3">
+                      <button
+                        onClick={() => handleDownload(true)}
+                        className="btn bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 flex-1 min-w-[120px] py-3"
+                      >
+                        <FaDownload className="mr-2" /> Download Without Watermark
+                      </button>
+                      <p className="text-xs text-gray-500 text-center">
+                        Available only for logged-in users
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {!isAuthenticated && resultUrl && (
+                  <div className="pt-4 border-t border-gray-200">
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <p className="text-sm text-yellow-800">
+                        <strong>Want to download without watermark?</strong> 
+                        <br />
+                        <a href="/login" className="underline font-semibold hover:text-yellow-900">
+                          Log in now
+                        </a> to get watermark-free downloads!
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-gray-300 rounded-lg">
@@ -370,6 +480,28 @@ const ImageProcessingPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Preview Modal */}
+      {showPreviewModal && resultUrl && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowPreviewModal(false)}
+        >
+          <div className="relative max-w-7xl max-h-full">
+            <button
+              onClick={() => setShowPreviewModal(false)}
+              className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors"
+            >
+              <FaTimes className="w-8 h-8" />
+            </button>
+            <img
+              src={resultUrl}
+              alt="Processed Preview"
+              className="max-w-full max-h-[90vh] object-contain rounded"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
