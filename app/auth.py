@@ -16,6 +16,23 @@ from fastapi import Request
 # Load environment variables
 load_dotenv()
 
+# Import vector DB and email service
+try:
+    from vector_db import vector_db
+    VECTOR_DB_AVAILABLE = True
+except ImportError:
+    vector_db = None
+    VECTOR_DB_AVAILABLE = False
+    print("Vector DB not available")
+
+try:
+    from email_service import email_service
+    EMAIL_SERVICE_AVAILABLE = True
+except ImportError:
+    email_service = None
+    EMAIL_SERVICE_AVAILABLE = False
+    print("Email service not available")
+
 # Try to connect to MongoDB, fall back to SQLite if unavailable
 try:
     from pymongo import MongoClient
@@ -120,6 +137,11 @@ def get_user(email: str) -> Optional[UserInDB]:
 
 # Helper function to create user
 def create_user(user_data: UserRegister) -> UserInDB:
+    # First check in vector DB if user already exists
+    if VECTOR_DB_AVAILABLE and vector_db:
+        if vector_db.check_user_exists(user_data.email):
+            raise HTTPException(status_code=400, detail="Email already registered")
+    
     existing_user = get_user(user_data.email)
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -157,6 +179,30 @@ def create_user(user_data: UserRegister) -> UserInDB:
         result = sqlite_db.create_user(user_data_dict)
         if not result:
             raise HTTPException(status_code=400, detail="Email already registered")
+
+    # Add user to vector DB for duplicate prevention
+    if VECTOR_DB_AVAILABLE and vector_db:
+        try:
+            vector_db.add_user(
+                user_id=user_id,
+                email=user_data.email,
+                user_data={
+                    "first_name": user_data.first_name or "",
+                    "last_name": user_data.last_name or ""
+                }
+            )
+        except Exception as e:
+            print(f"Warning: Failed to add user to vector DB: {e}")
+
+    # Send welcome email
+    if EMAIL_SERVICE_AVAILABLE and email_service:
+        try:
+            email_service.send_welcome_email(
+                to_email=user_data.email,
+                first_name=user_data.first_name or "User"
+            )
+        except Exception as e:
+            print(f"Warning: Failed to send welcome email: {e}")
 
     return user_in_db
 

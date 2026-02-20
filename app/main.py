@@ -4308,7 +4308,7 @@ async def register(user_data: UserRegister):
         auth_response = create_auth_response(user)
 
         return {
-            "message": "User registered successfully",
+            "message": "User registered successfully! A welcome email has been sent to your inbox.",
             "access_token": auth_response.access_token,
             "refresh_token": auth_response.refresh_token,
             "token_type": auth_response.token_type,
@@ -4316,7 +4316,8 @@ async def register(user_data: UserRegister):
                 "id": user.id,
                 "email": user.email,
                 "first_name": user.first_name,
-                "last_name": user.last_name
+                "last_name": user.last_name,
+                "is_pro": user.is_pro
             }
         }
     except HTTPException as e:

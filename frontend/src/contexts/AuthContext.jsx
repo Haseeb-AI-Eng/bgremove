@@ -1,7 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import API_CONFIG from '../config/api';
 
 const AuthContext = createContext();
+
+// Create axios instance with base configuration
+const api = axios.create({
+  baseURL: API_CONFIG.baseURL,
+  timeout: API_CONFIG.timeout,
+});
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -18,7 +25,7 @@ export const AuthProvider = ({ children }) => {
 
   // Set up axios interceptor for auth headers
   useEffect(() => {
-    const requestInterceptor = axios.interceptors.request.use(
+    const requestInterceptor = api.interceptors.request.use(
       (config) => {
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
@@ -29,7 +36,7 @@ export const AuthProvider = ({ children }) => {
     );
 
     return () => {
-      axios.interceptors.request.eject(requestInterceptor);
+      api.interceptors.request.eject(requestInterceptor);
     };
   }, [token]);
 
@@ -39,7 +46,7 @@ export const AuthProvider = ({ children }) => {
       const storedToken = localStorage.getItem('token');
       if (storedToken) {
         try {
-          const response = await axios.get('/auth/me', {
+          const response = await api.get('/auth/me', {
             headers: { Authorization: `Bearer ${storedToken}` }
           });
           setUser(response.data);
@@ -57,7 +64,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('/auth/login', { email, password });
+      const response = await api.post('/auth/login', { email, password });
       const { access_token, refresh_token } = response.data;
 
       localStorage.setItem('token', access_token);
@@ -77,7 +84,7 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async (email, password, firstName, lastName) => {
     try {
-      const response = await axios.post('/auth/register', {
+      const response = await api.post('/auth/register', {
         email,
         password,
         first_name: firstName,
@@ -110,7 +117,7 @@ export const AuthProvider = ({ children }) => {
 
   const updateProfile = async (profileData) => {
     try {
-      const response = await axios.put('/auth/update_profile', profileData);
+      const response = await api.put('/auth/update_profile', profileData);
       setUser(response.data.user);
       return { success: true, user: response.data.user };
     } catch (error) {
@@ -126,7 +133,7 @@ export const AuthProvider = ({ children }) => {
       const formData = new FormData();
       formData.append('profile_image', file);
 
-      const response = await axios.post('/auth/upload_profile_image', formData, {
+      const response = await api.post('/auth/upload_profile_image', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }

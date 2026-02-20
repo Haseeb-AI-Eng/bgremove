@@ -20,6 +20,8 @@ class ProductionConfig:
         "http://localhost:5173",  # Another common dev port
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
+        "http://localhost:8000",  # Backend port
+        "http://127.0.0.1:8000",
     ]
     
     # Add your actual production domain
