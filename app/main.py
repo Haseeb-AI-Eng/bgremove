@@ -675,20 +675,16 @@ async def get_image(filename: str):
 
 @app.post("/api/public-remove-background")
 async def public_remove_background(
-    file: UploadFile = File(...),
-    passport_photo: bool = Form(False),
-    bg_color: str = Form("blue")
+    file: UploadFile = File(...)
 ):
     """
     Remove background from an image.
 
     Args:
         file: Image file (PNG, JPG, etc.)
-        passport_photo: Whether to transform to passport photo size (default: False)
-        bg_color: Background color for passport photo (default: blue)
 
     Returns:
-        PNG image with transparent background (or passport photo if requested)
+        PNG image with transparent background
     """
     try:
         # Read the uploaded file
@@ -722,10 +718,6 @@ async def public_remove_background(
 
         # Convert to PIL Image
         result_img = Image.open(io.BytesIO(output))
-        
-        # Apply passport photo transformation if requested
-        if passport_photo:
-            result_img = transform_to_passport_photo(result_img, bg_color)
 
         # Convert to RGB for watermarking
         if result_img.mode == 'RGBA':
@@ -750,6 +742,89 @@ async def public_remove_background(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
+
+
+@app.post("/api/public-passport-photo")
+async def public_passport_photo(
+    file: UploadFile = File(...),
+    bg_color: str = Form("blue")
+):
+    """
+    Transform an image to passport photo size with colored background.
+    
+    Standard passport photo sizes:
+    - US: 2x2 inches (51x51 mm)
+    - EU/International: 35x45 mm
+    - Common pixel size at 300 DPI: 600x600 pixels (2x2 inches)
+
+    Args:
+        file: Image file (PNG, JPG, etc.)
+        bg_color: Background color ("blue", "white", "red", "gray", "light-blue")
+
+    Returns:
+        PNG image with passport photo dimensions and background
+    """
+    try:
+        # Read the uploaded file
+        contents = await file.read()
+
+        # Validate file type by checking file signature
+        if not contents[:4] in [b'\x89PNG', b'\xFF\xD8\xFF', b'GIF8', b'\x49\x49\x2A\x00', b'\x4D\x4D\x00\x2A', b'\x00\x00\x00\x0C']:
+            # Not perfect but checks for common image formats: PNG, JPEG, GIF, TIFF, etc.
+            # Use file extension as backup check as well
+            file_ext = os.path.splitext(file.filename)[1].lower()
+            allowed_exts = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff', '.webp']
+            if file_ext not in allowed_exts:
+                raise HTTPException(status_code=400, detail="Invalid file type. Only image files are allowed")
+
+        # Validate file size (max 10MB)
+        if len(contents) > 10 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="File size exceeds 10MB limit")
+
+        # Try to open image with PIL to validate it's a valid image file
+        try:
+            img = Image.open(io.BytesIO(contents))
+            img.verify()  # Verify that it's a valid image
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid or corrupted image file")
+
+        # Reopen image after verification
+        img = Image.open(io.BytesIO(contents))
+
+        # Process image with rembg to remove background first
+        output = remove(contents, session=session)
+
+        # Convert to PIL Image
+        result_img = Image.open(io.BytesIO(output))
+
+        # Apply passport photo transformation
+        result_img = transform_to_passport_photo(result_img, bg_color)
+
+        # Convert to RGB for watermarking
+        if result_img.mode == 'RGBA':
+            img_rgb = result_img.convert("RGB")
+        else:
+            img_rgb = result_img
+
+        # Add watermark with anonymous identifier for public endpoint
+        watermarked_img = add_watermark(img_rgb, "anonymous_user")
+
+        # Save to bytes
+        output_bytes = io.BytesIO()
+        watermarked_img.save(output_bytes, format="PNG")
+        output_bytes.seek(0)
+
+        # Return as PNG
+        return StreamingResponse(
+            output_bytes,
+            media_type="image/png",
+            headers={"Content-Disposition": "attachment; filename=passport_photo.png"}
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing passport photo: {str(e)}")
 
 
 @app.post("/api/change-clothes")
@@ -927,9 +1002,7 @@ async def change_clothes(
 @app.post("/api/public-change-clothes")
 async def public_change_clothes(
     original_image: UploadFile = File(..., description="Original image with person wearing clothes to be replaced"),
-    new_clothes_image: UploadFile = File(..., description="New clothes image to replace with"),
-    passport_photo: bool = Form(False),
-    passport_bg: str = Form("blue")
+    new_clothes_image: UploadFile = File(..., description="New clothes image to replace with")
 ):
     """
     Replace clothes in original image with new clothes image using segmentation (public endpoint without authentication).
@@ -937,11 +1010,9 @@ async def public_change_clothes(
     Args:
         original_image: Original image with person wearing clothes to be replaced (PNG, JPG, etc.)
         new_clothes_image: New clothes image to replace with (PNG, JPG, etc.)
-        passport_photo: Whether to transform to passport photo size (default: False)
-        passport_bg: Background color for passport photo (default: blue)
 
     Returns:
-        Image with original person wearing new clothes (or passport photo if requested)
+        Image with original person wearing new clothes
     """
     try:
         # Read both uploaded files
@@ -1005,10 +1076,6 @@ async def public_change_clothes(
         # Convert back to PIL Image
         result_img = Image.fromarray(result)
 
-        # Apply passport photo transformation if requested
-        if passport_photo:
-            result_img = transform_to_passport_photo(result_img, passport_bg)
-
         # Add watermark with anonymous identifier for public endpoint
         watermarked_img = add_watermark(result_img, "anonymous_user")
 
@@ -1031,9 +1098,7 @@ async def public_change_clothes(
 async def change_background(
     file: UploadFile = File(...),
     bg_color: Optional[str] = Form(None),
-    quality: Optional[str] = Form("high"),
-    passport_photo: bool = Form(False),
-    passport_bg: str = Form("blue")
+    quality: Optional[str] = Form("high")
 ):
     """
     Change background color in an image.
@@ -1042,11 +1107,9 @@ async def change_background(
     Args:
         file: Image file (PNG, JPG, etc.)
         bg_color: Background color in hex format (default: "FFFFFF" for white)
-        passport_photo: Whether to transform to passport photo size (default: False)
-        passport_bg: Background color for passport photo (default: blue)
 
     Returns:
-        Image with new background color (or passport photo if requested)
+        Image with new background color
     """
     try:
         # Read the uploaded file
@@ -1091,19 +1154,15 @@ async def change_background(
         # Open the image with transparent background
         img_with_transparency = Image.open(io.BytesIO(removed_bg)).convert("RGBA")
 
-        # Apply passport photo transformation if requested
-        if passport_photo:
-            result_img = transform_to_passport_photo(img_with_transparency, passport_bg)
-        else:
-            # Create new background image with specified color
-            # Use alpha compositing for proper blending
-            bg_rgba = Image.new("RGBA", img_with_transparency.size, bg_rgb + (255,))  # Add alpha of 255 (opaque)
+        # Create new background image with specified color
+        # Use alpha compositing for proper blending
+        bg_rgba = Image.new("RGBA", img_with_transparency.size, bg_rgb + (255,))  # Add alpha of 255 (opaque)
 
-            # Composite the transparent image onto the colored background
-            composited = Image.alpha_composite(bg_rgba, img_with_transparency)
+        # Composite the transparent image onto the colored background
+        composited = Image.alpha_composite(bg_rgba, img_with_transparency)
 
-            # Convert back to RGB
-            result_img = composited.convert("RGB")
+        # Convert back to RGB
+        result_img = composited.convert("RGB")
 
         # Add watermark with anonymous identifier for public endpoint
         watermarked_img = add_watermark(result_img, "anonymous_user")
@@ -4079,9 +4138,7 @@ async def replace_background(
 @app.post("/api/public-replace-background")
 async def public_replace_background(
     file: UploadFile = File(..., description="Original image with subject"),
-    background_image: UploadFile = File(..., description="Scenery/background image to replace with"),
-    passport_photo: bool = Form(False),
-    passport_bg: str = Form("blue")
+    background_image: UploadFile = File(..., description="Scenery/background image to replace with")
 ):
     """
     Replace background of an image with a custom scenery/background image (public endpoint without authentication).
@@ -4089,11 +4146,9 @@ async def public_replace_background(
     Args:
         file: Original image file with the subject (PNG, JPG, etc.)
         background_image: Scenery/background image to replace with (PNG, JPG, etc.)
-        passport_photo: Whether to transform to passport photo size (default: False)
-        passport_bg: Background color for passport photo (default: blue)
 
     Returns:
-        Image with original subject and new background (or passport photo if requested)
+        Image with original subject and new background
     """
     try:
         # Read both uploaded files
@@ -4165,12 +4220,8 @@ async def public_replace_background(
         # Paste the foreground image with transparency onto the background
         result_img.paste(foreground_img, (0, 0), mask=alpha_mask)
 
-        # Apply passport photo transformation if requested
-        if passport_photo:
-            result_img = transform_to_passport_photo(result_img, passport_bg)
-        else:
-            # Convert back to RGB before final saving (since background is RGB and subject is now composited)
-            result_img = result_img.convert('RGB')
+        # Convert back to RGB before final saving (since background is RGB and subject is now composited)
+        result_img = result_img.convert('RGB')
 
         # Apply watermark with anonymous identifier for public endpoint
         watermarked_img = add_watermark(result_img, "anonymous_user")

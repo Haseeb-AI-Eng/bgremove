@@ -3,6 +3,7 @@ import { FaUpload, FaDownload, FaMagic, FaTrash, FaEye, FaPalette, FaUserLock, F
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
+import WalkingRobotAgent from '../../components/WalkingRobotAgent';
 
 const ImageProcessingPage = () => {
   const { isAuthenticated } = useAuth();
@@ -15,7 +16,6 @@ const ImageProcessingPage = () => {
   const [loading, setLoading] = useState(false);
   const [processingType, setProcessingType] = useState('remove-background');
   const [backgroundColor, setBackgroundColor] = useState('#ffffff'); // Default to white
-  const [passportPhoto, setPassportPhoto] = useState(false);
   const [passportBgColor, setPassportBgColor] = useState('blue');
   const [showPreviewModal, setShowPreviewModal] = useState(false);
 
@@ -60,8 +60,6 @@ const ImageProcessingPage = () => {
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
-      formData.append('passport_photo', passportPhoto);
-      formData.append('passport_bg', passportBgColor);
 
       let endpoint;
       switch (processingType) {
@@ -76,11 +74,9 @@ const ImageProcessingPage = () => {
           formData.append('background_image', selectedBackgroundFile);
           endpoint = '/api/public-replace-background';
           break;
-        case 'change-clothes':
-          endpoint = '/api/public-change-clothes';
-          break;
-        case 'replace-clothes':
-          endpoint = '/api/public-replace-clothes';
+        case 'passport-photo':
+          endpoint = '/api/public-passport-photo';
+          formData.append('bg_color', passportBgColor);
           break;
         default:
           endpoint = '/api/public-remove-background';
@@ -190,7 +186,7 @@ const ImageProcessingPage = () => {
                   { value: 'remove-background', label: 'Remove Background' },
                   { value: 'change-background', label: 'Change Background Color' },
                   { value: 'replace-background', label: 'Replace Background' },
-                  { value: 'change-clothes', label: 'Change Clothes Color' }
+                  { value: 'passport-photo', label: 'Passport Photo' }
                 ].map((option) => (
                   <label key={option.value} className="flex items-center">
                     <input
@@ -207,33 +203,28 @@ const ImageProcessingPage = () => {
               </div>
             </div>
 
-            {/* Passport Photo Size Option */}
-            <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <label className="flex items-start">
-                <input
-                  type="checkbox"
-                  checked={passportPhoto}
-                  onChange={(e) => setPassportPhoto(e.target.checked)}
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 mt-1"
-                />
-                <div className="ml-3">
-                  <span className="block text-sm font-medium text-gray-900">
-                    Transform to Passport Photo Size
-                  </span>
-                  <span className="block text-xs text-gray-600">
-                    Convert to standard passport photo dimensions (35x45mm) with colored background
-                  </span>
-                </div>
-              </label>
-              
-              {passportPhoto && (
-                <div className="mt-3 ml-7">
-                  <p className="text-sm text-gray-600">
-                    Default background color will be applied for passport photo
+            {/* Passport Photo Background Color Selection */}
+            {processingType === 'passport-photo' && (
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Passport Photo Background Color</label>
+                <div className="space-y-3">
+                  <select
+                    value={passportBgColor}
+                    onChange={(e) => setPassportBgColor(e.target.value)}
+                    className="input-field w-full"
+                  >
+                    <option value="blue">Blue (Standard)</option>
+                    <option value="white">White</option>
+                    <option value="red">Red</option>
+                    <option value="gray">Gray</option>
+                    <option value="light-blue">Light Blue</option>
+                  </select>
+                  <p className="text-xs text-gray-500">
+                    Standard passport photo dimensions (35x45mm) with selected background color
                   </p>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Original Image Upload */}
             <div className="mb-6">
@@ -502,6 +493,9 @@ const ImageProcessingPage = () => {
           </div>
         </div>
       )}
+
+      {/* Walking Robot Agent */}
+      <WalkingRobotAgent />
     </div>
   );
 };
