@@ -4355,7 +4355,6 @@ async def show_login_form():
     from fastapi.responses import RedirectResponse
     return RedirectResponse(url=f"{frontend_url}/login")
 
-
 @app.post("/auth/login")
 async def login(user_data: UserLogin):
     """Login user and return access and refresh tokens"""
