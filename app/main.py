@@ -4044,7 +4044,7 @@ async def replace_background(
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid or corrupted background image file")
 
-        # Reopen images after verification
+        # images after verification
         original_img_after_verify = Image.open(io.BytesIO(original_contents))
 
         # Remove background from the original image
