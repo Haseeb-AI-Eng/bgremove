@@ -4299,6 +4299,21 @@ async def refresh_token(request: RefreshTokenRequest):
     }
 
 
+@app.get("/auth/register")
+async def show_register_form():
+    """
+    Show registration page (GET route for browser navigation)
+    In production, this serves the frontend SPA.
+    In development, the frontend handles routing via React Router.
+    """
+    # For production: redirect to frontend URL or serve index.html
+    frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+    
+    # If this is a direct browser request (not API call), redirect to frontend
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url=f"{frontend_url}/signup")
+
+
 @app.post("/auth/register")
 async def register(user_data: UserRegister):
     """Register a new user"""
@@ -4324,6 +4339,21 @@ async def register(user_data: UserRegister):
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
+
+
+@app.get("/auth/login")
+async def show_login_form():
+    """
+    Show login page (GET route for browser navigation)
+    In production, this serves the frontend SPA.
+    In development, the frontend handles routing via React Router.
+    """
+    # For production: redirect to frontend URL or serve index.html
+    frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+    
+    # If this is a direct browser request (not API call), redirect to frontend
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url=f"{frontend_url}/login")
 
 
 @app.post("/auth/login")
