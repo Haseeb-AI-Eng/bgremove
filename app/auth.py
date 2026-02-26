@@ -68,7 +68,10 @@ class User(BaseModel):
     email: str
     password: str
     created_at: datetime = datetime.utcnow()
+    # account active flag (used for disabling or before verification)
     is_active: bool = True
+    # email verification status
+    is_verified: bool = False
     is_pro: bool = False
     subscription_end: Optional[datetime] = None
     first_name: Optional[str] = None
@@ -126,6 +129,7 @@ def get_user(email: str) -> Optional[UserInDB]:
                 hashed_password=user_data['hashed_password'],
                 created_at=user_data['created_at'],
                 is_active=user_data['is_active'],
+                is_verified=user_data.get('is_verified', False),
                 is_pro=user_data['is_pro'],
                 subscription_end=user_data['subscription_end'],
                 first_name=user_data['first_name'],
@@ -137,6 +141,14 @@ def get_user(email: str) -> Optional[UserInDB]:
 
 # Helper function to create user
 def create_user(user_data: UserRegister) -> UserInDB:
+    """Create a new user record and send verification email.
+
+    Returns:
+        UserInDB object representing the created user.  The account will be
+        created with `is_active=False` and `is_verified=False` until the user
+        clicks the verification link that is sent by email.  If email service
+        is configured a verification email is dispatched automatically.
+    """
     # First check in vector DB if user already exists
     if VECTOR_DB_AVAILABLE and vector_db:
         if vector_db.check_user_exists(user_data.email):
@@ -149,13 +161,16 @@ def create_user(user_data: UserRegister) -> UserInDB:
     hashed_password = get_password_hash(user_data.password)
     user_id = str(ObjectId()) if client is not None else str(uuid.uuid4())
 
+    # new user starts out inactive & unverified
     user_in_db = UserInDB(
         id=user_id,
         email=user_data.email,
         password="",  # Not storing plain password
         hashed_password=hashed_password,
         first_name=user_data.first_name,
-        last_name=user_data.last_name
+        last_name=user_data.last_name,
+        is_active=False,
+        is_verified=False
     )
 
     # Insert the user and get the inserted ID
@@ -174,7 +189,9 @@ def create_user(user_data: UserRegister) -> UserInDB:
             'email': user_in_db.email,
             'hashed_password': user_in_db.hashed_password,
             'first_name': user_in_db.first_name,
-            'last_name': user_in_db.last_name
+            'last_name': user_in_db.last_name,
+            'is_active': int(user_in_db.is_active),
+            'is_verified': int(user_in_db.is_verified)
         }
         result = sqlite_db.create_user(user_data_dict)
         if not result:
@@ -194,15 +211,18 @@ def create_user(user_data: UserRegister) -> UserInDB:
         except Exception as e:
             print(f"Warning: Failed to add user to vector DB: {e}")
 
-    # Send welcome email
+    # generate verification token unconditionally so we can verify later
+    token = generate_verification_token(user_in_db.id)
+
+    # attempt to send email with link if service configured
     if EMAIL_SERVICE_AVAILABLE and email_service:
         try:
-            email_service.send_welcome_email(
+            email_service.send_verification_email(
                 to_email=user_data.email,
-                first_name=user_data.first_name or "User"
+                verification_token=token
             )
         except Exception as e:
-            print(f"Warning: Failed to send welcome email: {e}")
+            print(f"Warning: Failed to send verification email: {e}")
 
     return user_in_db
 
@@ -235,7 +255,11 @@ def create_auth_response(user: UserInDB) -> Token:
 # Helper function to authenticate user
 def authenticate_user(email: str, password: str) -> Optional[UserInDB]:
     user = get_user(email)
+    # user must exist, password must match, and account must be active/verified
     if not user or not verify_password(password, user.hashed_password):
+        return None
+    if not user.is_active or not user.is_verified:
+        # treat as not found so caller can provide generic message
         return None
     return user
 
@@ -259,6 +283,104 @@ def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode.update({"exp": expire, "type": "refresh"})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+# ------------------------------------------------------------------
+# Email verification support
+# ------------------------------------------------------------------
+
+def generate_verification_token(user_id: str) -> str:
+    """Create a verification token and persist it.
+    Returns the raw token which can be emailed to the user.
+    """
+    token = secrets.token_urlsafe(32)
+    expires_at = datetime.utcnow() + timedelta(hours=24)
+    store_verification_token(user_id, token, expires_at)
+    return token
+
+
+def store_verification_token(user_id: str, token: str, expires_at: datetime):
+    token_doc = {
+        "user_id": user_id,
+        "token": token,
+        "expires_at": expires_at,
+        "created_at": datetime.utcnow(),
+        "is_active": True
+    }
+    if DATABASE_TYPE == "mongodb":
+        if client is not None:
+            db.email_verification_tokens.insert_one(token_doc)
+        else:
+            coll = db('email_verification_tokens')
+            coll.insert_one(token_doc)
+    elif DATABASE_TYPE == "sqlite":
+        return sqlite_db.store_verification_token(user_id, token, expires_at)
+
+
+def verify_email_token(token: str) -> bool:
+    """Validate a verification token, activate user if valid.
+    Returns True on successful verification, False otherwise.
+    """
+    if DATABASE_TYPE == "mongodb":
+        if client is not None:
+            token_doc = db.email_verification_tokens.find_one({
+                "token": token,
+                "is_active": True,
+                "expires_at": {"$gt": datetime.utcnow()}
+            })
+        else:
+            coll = db('email_verification_tokens')
+            token_doc = coll.find_one({
+                "token": token,
+                "is_active": True,
+                "expires_at": {"$gt": datetime.utcnow()}
+            })
+        if not token_doc:
+            return False
+        # mark token used and activate the user
+        if client is not None:
+            db.email_verification_tokens.update_one(
+                {"_id": token_doc["_id"]},
+                {"$set": {"is_active": False}}
+            )
+            db.users.update_one(
+                {"_id": ObjectId(token_doc["user_id"])},
+                {"$set": {"is_verified": True, "is_active": True}}
+            )
+        else:
+            coll.update_one(
+                {"_id": token_doc["_id"]},
+                {"$set": {"is_active": False}}
+            )
+            users_coll = db('users')
+            users_coll.update_one(
+                {"_id": token_doc["user_id"]},
+                {"$set": {"is_verified": True, "is_active": True}}
+            )
+        return True
+    elif DATABASE_TYPE == "sqlite":
+        return sqlite_db.verify_email_token(token)
+
+
+def get_verification_token_for_user(email: str) -> Optional[str]:
+    """Helper used primarily by tests to fetch the outstanding token."""
+    user = get_user(email)
+    if not user:
+        return None
+    if DATABASE_TYPE == "mongodb":
+        if client is not None:
+            token_doc = db.email_verification_tokens.find_one({
+                "user_id": user.id,
+                "is_active": True
+            })
+        else:
+            coll = db('email_verification_tokens')
+            token_doc = coll.find_one({
+                "user_id": user.id,
+                "is_active": True
+            })
+        return token_doc["token"] if token_doc else None
+    elif DATABASE_TYPE == "sqlite":
+        return sqlite_db.get_verification_token_for_user(user.id)
 
 # Store refresh tokens in database
 def store_refresh_token(user_id: str, refresh_token: str, expires_at: datetime):
@@ -339,7 +461,8 @@ def get_current_user(token: str = Depends(security)) -> UserInDB:
         raise credentials_exception
 
     user = get_user(email=email)
-    if user is None:
+    if user is None or not user.is_active or not user.is_verified:
+        # anything not active/verified is treated as invalid credentials
         raise credentials_exception
     return user
 

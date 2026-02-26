@@ -101,27 +101,40 @@ def test_auth_flow():
                 last_name="User"
             )
             user = create_user(user_data)
-            print(f"✓ User created: {user.id}")
-            print(f"  Email: {user.email}")
-            print(f"  First Name: {user.first_name}")
-            print(f"  Last Name: {user.last_name}")
+            print(f"✓ User created: {user.id} (active={user.is_active} verified={user.is_verified})")
         except Exception as e:
             if "Email already registered" in str(e):
                 print(f"⚠ User already exists (expected in test): {test_email}")
                 user = get_user(test_email)
             else:
                 raise
-        
-        # Test authentication
-        print(f"\nAuthenticating user: {test_email}")
+
+        # newly registered accounts should not authenticate until verified
+        print(f"\nAuthenticating before verification (should fail): {test_email}")
+        pre_auth = authenticate_user(test_email, test_password)
+        if not pre_auth:
+            print("✓ Authentication correctly blocked before verification")
+        else:
+            print("✗ Authentication succeeded unexpectedly")
+
+        # grab the token and verify via helper
+        from auth import get_verification_token_for_user, verify_email_token
+        token = get_verification_token_for_user(test_email)
+        if token:
+            print(f"Verifying email using token: {token}")
+            ok = verify_email_token(token)
+            print(f"✓ verify_email_token returned {ok}")
+        else:
+            print("⚠ No verification token found (email service may be disabled)")
+
+        # now authentication should work
+        print(f"\nAuthenticating user after verification: {test_email}")
         authenticated_user = authenticate_user(test_email, test_password)
         if authenticated_user:
             print(f"✓ Authentication successful")
-            print(f"  User ID: {authenticated_user.id}")
-            print(f"  Email: {authenticated_user.email}")
         else:
-            print(f"✗ Authentication failed")
-        
+            print(f"✗ Authentication still failing after verification")
+
         # Test duplicate prevention
         print(f"\nTesting duplicate registration: {test_email}")
         try:

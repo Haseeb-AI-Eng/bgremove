@@ -63,43 +63,58 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    try {
-      const response = await api.post('/auth/login', { email, password });
-      const { access_token, refresh_token } = response.data;
+    // Try path for both '/auth/login' and '/api/auth/login' (some deployments prefix API)
+    const paths = ['/auth/login', '/api/auth/login'];
+    let lastError;
+    for (const path of paths) {
+      try {
+        const response = await api.post(path, { email, password });
+        const { access_token, refresh_token } = response.data;
 
-      localStorage.setItem('token', access_token);
-      localStorage.setItem('refreshToken', refresh_token);
+        localStorage.setItem('token', access_token);
+        localStorage.setItem('refreshToken', refresh_token);
 
-      setToken(access_token);
-      setUser(response.data.user || { email }); // fallback if user object isn't returned
+        setToken(access_token);
+        setUser(response.data.user || { email }); // fallback if user object isn't returned
 
-      return { success: true };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.detail || 'Login failed'
-      };
+        return { success: true };
+      } catch (error) {
+        lastError = error;
+        // continue to next path
+      }
     }
+    return {
+      success: false,
+      error: lastError?.response?.data?.detail || 'Login failed'
+    };
   };
 
   const signup = async (email, password, firstName, lastName) => {
     try {
-      const response = await api.post('/auth/register', {
-        email,
-        password,
-        first_name: firstName,
-        last_name: lastName
-      });
+      // try both paths to guard against mismatched proxy prefixes
+      let response;
+      try {
+        response = await api.post('/auth/register', {
+          email,
+          password,
+          first_name: firstName,
+          last_name: lastName
+        });
+      } catch (err) {
+        // fallback to api prefix
+        response = await api.post('/api/auth/register', {
+          email,
+          password,
+          first_name: firstName,
+          last_name: lastName
+        });
+      }
 
-      const { access_token, refresh_token } = response.data;
-
-      localStorage.setItem('token', access_token);
-      localStorage.setItem('refreshToken', refresh_token);
-
-      setToken(access_token);
-      setUser({ email, first_name: firstName, last_name: lastName });
-
-      return { success: true };
+      // registration now requires email verification before login
+      return {
+        success: true,
+        message: response.data.message || 'Please verify your email before logging in.'
+      };
     } catch (error) {
       return {
         success: false,

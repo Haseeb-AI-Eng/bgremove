@@ -46,8 +46,9 @@ const SignupPage = () => {
       );
       
       if (result.success) {
-        toast.success('Account created successfully!');
-        navigate('/dashboard');
+        // message may instruct user to verify email
+        toast.success(result.message || 'Account created successfully!');
+        // do not auto-navigate or log in until verification
       } else {
         toast.error(result.error || 'Registration failed');
       }

@@ -4314,31 +4314,53 @@ async def show_register_form():
     return RedirectResponse(url=f"{frontend_url}/signup")
 
 
+# --- registration / verification endpoints --------------------------------
+
+@app.options("/auth/register")
+async def options_register():
+    # explicit options response so preflight never 405
+    from fastapi.responses import Response
+    return Response(status_code=200)
+
 @app.post("/auth/register")
 async def register(user_data: UserRegister):
-    """Register a new user"""
+    """Register a new user and send a verification email.
+
+    Note: tokens are **not** created until the user verifies their
+    email address.  The frontend should display the `message` and not
+    attempt to login automatically.
+    """
     try:
         user = create_user(user_data)
-        # Create authentication response for auto-login after registration
-        auth_response = create_auth_response(user)
-
         return {
-            "message": "User registered successfully! A welcome email has been sent to your inbox.",
-            "access_token": auth_response.access_token,
-            "refresh_token": auth_response.refresh_token,
-            "token_type": auth_response.token_type,
-            "user": {
-                "id": user.id,
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "is_pro": user.is_pro
-            }
+            "message": "User registered successfully. Please check your inbox and verify your email address before logging in."
         }
     except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
+
+# duplicate under /api prefix to avoid proxy path issues
+@app.options("/api/auth/register")
+async def options_register_api():
+    from fastapi.responses import Response
+    return Response(status_code=200)
+
+@app.post("/api/auth/register")
+async def register_api(user_data: UserRegister):
+    return await register(user_data)
+# ------------------------------------------------------------------
+# email verification endpoint
+@app.get("/auth/verify-email")
+async def verify_email(token: str):
+    """Endpoint hit by link sent to user in verification email."""
+    if verify_email_token(token):
+        return {"message": "Email successfully verified, you may now log in."}
+    raise HTTPException(status_code=400, detail="Invalid or expired verification token")
+
+@app.get("/api/auth/verify-email")
+async def verify_email_api(token: str):
+    return await verify_email(token)
 
 
 @app.get("/auth/login")
@@ -4355,6 +4377,15 @@ async def show_login_form():
     from fastapi.responses import RedirectResponse
     return RedirectResponse(url=f"{frontend_url}/login")
 
+@app.get("/api/auth/login")
+async def show_login_form_api():
+    return await show_login_form()
+
+@app.options("/auth/login")
+async def options_login():
+    from fastapi.responses import Response
+    return Response(status_code=200)
+
 @app.post("/auth/login")
 async def login(user_data: UserLogin):
     """Login user and return access and refresh tokens"""
@@ -4362,7 +4393,7 @@ async def login(user_data: UserLogin):
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
+            detail="Incorrect email or password or account not verified",
             headers={"WWW-Authenticate": "Bearer"},
         )
 

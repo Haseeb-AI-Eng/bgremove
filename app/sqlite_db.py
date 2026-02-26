@@ -23,6 +23,7 @@ class SQLiteDB:
                 hashed_password TEXT NOT NULL,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 is_active INTEGER DEFAULT 1,
+                is_verified INTEGER DEFAULT 0,
                 is_pro INTEGER DEFAULT 0,
                 subscription_end TEXT,
                 first_name TEXT,
@@ -63,6 +64,19 @@ class SQLiteDB:
             )
         ''')
         
+        # Create email verification token table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS email_verification_tokens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id TEXT NOT NULL,
+                token TEXT NOT NULL UNIQUE,
+                expires_at TEXT NOT NULL,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                is_active INTEGER DEFAULT 1,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )
+        ''')
+        
         conn.commit()
         conn.close()
     
@@ -81,12 +95,13 @@ class SQLiteDB:
                 'hashed_password': row[2],
                 'created_at': datetime.fromisoformat(row[3]) if isinstance(row[3], str) else row[3],
                 'is_active': bool(row[4]),
-                'is_pro': bool(row[5]),
-                'subscription_end': datetime.fromisoformat(row[6]) if row[6] else None,
-                'first_name': row[7],
-                'last_name': row[8],
-                'bio': row[9],
-                'profile_image': row[10]
+                'is_verified': bool(row[5]),
+                'is_pro': bool(row[6]),
+                'subscription_end': datetime.fromisoformat(row[7]) if row[7] else None,
+                'first_name': row[8],
+                'last_name': row[9],
+                'bio': row[10],
+                'profile_image': row[11]
             }
             conn.close()
             return user_dict
@@ -109,14 +124,16 @@ class SQLiteDB:
             # Insert new user
             cursor.execute('''
                 INSERT INTO users (
-                    id, email, hashed_password, first_name, last_name
-                ) VALUES (?, ?, ?, ?, ?)
+                    id, email, hashed_password, first_name, last_name, is_active, is_verified
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
             ''', (
                 user_data['id'],
                 user_data['email'],
                 user_data['hashed_password'],
                 user_data.get('first_name'),
-                user_data.get('last_name')
+                user_data.get('last_name'),
+                user_data.get('is_active', 0),
+                user_data.get('is_verified', 0)
             ))
             
             conn.commit()
@@ -226,6 +243,57 @@ class SQLiteDB:
         conn.commit()
         conn.close()
         return cursor.rowcount > 0
+
+    # ------------------------------------------------------------------
+    # Email verification token helpers
+    # ------------------------------------------------------------------
+    def store_verification_token(self, user_id: str, token: str, expires_at: datetime):
+        """Save an email verification token"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO email_verification_tokens (user_id, token, expires_at)
+            VALUES (?, ?, ?)
+        ''', (user_id, token, expires_at.isoformat()))
+        
+        conn.commit()
+        conn.close()
+        return cursor.lastrowid
+
+    def verify_email_token(self, token: str) -> bool:
+        """Consume a verification token and activate the associated user."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT user_id FROM email_verification_tokens
+            WHERE token = ? AND is_active = 1 AND expires_at > ?
+        ''', (token, datetime.utcnow().isoformat()))
+        row = cursor.fetchone()
+        if not row:
+            conn.close()
+            return False
+        user_id = row[0]
+        # mark token inactive and user verified/active
+        cursor.execute('UPDATE email_verification_tokens SET is_active = 0 WHERE token = ?', (token,))
+        cursor.execute('UPDATE users SET is_verified = 1, is_active = 1 WHERE id = ?', (user_id,))
+        conn.commit()
+        conn.close()
+        return True
+
+    def get_verification_token_for_user(self, user_id: str) -> Optional[str]:
+        """Return an active verification token (for testing)"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT token FROM email_verification_tokens
+            WHERE user_id = ? AND is_active = 1
+            ORDER BY id DESC LIMIT 1
+        ''', (user_id,))
+        row = cursor.fetchone()
+        conn.close()
+        return row[0] if row else None
     
     def create_api_key(self, api_key_data: dict):
         """Create a new API key"""

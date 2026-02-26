@@ -27,6 +27,7 @@ import GalleryPage from './pages/GalleryPage';
 import AutoAgentPage from './pages/AutoAgentPage';
 import WatermarkRemovalPage from './pages/services/WatermarkRemovalPage';
 import ImageEnhancementPage from './pages/services/ImageEnhancementPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 import useScrollToTop from './hooks/useScrollToTop';
 import './App.css';
 
@@ -51,6 +52,7 @@ function App() {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
               <Route path="/gallery" element={<GalleryPage />} />
               <Route path="/payment" element={<PaymentPage />} />
               <Route path="/auto-agent" element={<AutoAgentPage />} />
