@@ -13,7 +13,6 @@ const Layout = ({ children }) => {
   const navLinks = [
     { name: t('home'), path: '/', icon: <FaHome className="mr-2" /> },
     { name: t('services'), path: '/services', icon: <FaWrench className="mr-2" /> },
-    { name: t('gallery'), path: '/gallery', icon: <FaFileImage className="mr-2" /> },
     { name: t('pricing'), path: '/pricing', icon: <FaTags className="mr-2" /> },
   ];
 

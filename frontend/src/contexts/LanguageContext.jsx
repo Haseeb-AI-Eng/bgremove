@@ -11,7 +11,7 @@ const translations = {
     login: 'Login',
     signUp: 'Sign Up',
     logout: 'Logout',
-    gallery: 'Gallery',
+    // gallery: 'Gallery',
     autoAgent: 'Agent',
     apiDashboard: 'API',
 

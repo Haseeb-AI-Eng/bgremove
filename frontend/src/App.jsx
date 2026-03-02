@@ -23,7 +23,6 @@ import MetadataAnalyzerPage from './pages/services/MetadataAnalyzerPage';
 import FormatConverterPage from './pages/services/FormatConverterPage';
 import PaymentPage from './components/PaymentPage';
 import TourGuide from './components/TourGuide';
-import GalleryPage from './pages/GalleryPage';
 import AutoAgentPage from './pages/AutoAgentPage';
 import WatermarkRemovalPage from './pages/services/WatermarkRemovalPage';
 import ImageEnhancementPage from './pages/services/ImageEnhancementPage';
@@ -53,7 +52,6 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
-              <Route path="/gallery" element={<GalleryPage />} />
               <Route path="/payment" element={<PaymentPage />} />
               <Route path="/auto-agent" element={<AutoAgentPage />} />
 
