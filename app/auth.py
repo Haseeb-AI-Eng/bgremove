@@ -37,9 +37,11 @@ except ImportError:
 try:
     from pymongo import MongoClient
     MONGODB_URI = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/')
-    DB_NAME = os.getenv('DB_NAME', 'admin')
+    DB_NAME = os.getenv('DB_NAME', 'config')
+    COLLECTION_NAME = os.getenv('COLLECTION_NAME', 'bgremove')
     client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=1000)  # 1 second timeout
-    db = client[DB_NAME]  # Using configured database name
+    db = client[DB_NAME]
+    collection = db[COLLECTION_NAME]
     # Test the connection
     client.admin.command('ping')
     print("Connected to MongoDB successfully")
@@ -114,18 +116,17 @@ def get_password_hash(password):
 # Helper function to find user by email
 def get_user(email: str) -> Optional[UserInDB]:
     if DATABASE_TYPE == "mongodb":
-        if client is not None:  # Using real MongoDB
-            user_data = db.users.find_one({"email": email})
+        if client is not None:
+            user_data = collection.find_one({"email": email, "type": "user"})
             if user_data:
                 return UserInDB(**user_data, id=str(user_data["_id"]))
     elif DATABASE_TYPE == "sqlite":
         user_data = sqlite_db.get_user(email)
         if user_data:
-            # Convert SQLite user data to UserInDB format
             return UserInDB(
                 id=user_data['id'],
                 email=user_data['email'],
-                password="",  # Not stored in DB
+                password="",
                 hashed_password=user_data['hashed_password'],
                 created_at=user_data['created_at'],
                 is_active=user_data['is_active'],
@@ -161,7 +162,7 @@ def create_user(user_data: UserRegister) -> UserInDB:
     hashed_password = get_password_hash(user_data.password)
     user_id = str(ObjectId()) if client is not None else str(uuid.uuid4())
 
-    # new user starts out inactive & unverified
+    # new user starts out active & verified
     user_in_db = UserInDB(
         id=user_id,
         email=user_data.email,
@@ -169,16 +170,18 @@ def create_user(user_data: UserRegister) -> UserInDB:
         hashed_password=hashed_password,
         first_name=user_data.first_name,
         last_name=user_data.last_name,
-        is_active=False,
-        is_verified=False
+        is_active=True,
+        is_verified=True
     )
 
     # Insert the user and get the inserted ID
     if DATABASE_TYPE == "mongodb":
-        if client is not None:  # Using real MongoDB
-            result = db.users.insert_one(user_in_db.dict(exclude={'id'}))
+        if client is not None:
+            user_doc = user_in_db.dict(exclude={'id'})
+            user_doc['type'] = 'user'
+            result = collection.insert_one(user_doc)
             user_in_db.id = str(result.inserted_id)
-        else:  # Using mock database
+        else:
             users_collection = db('users')
             result = users_collection.insert_one(user_in_db.dict(exclude={'id'}))
             user_in_db.id = str(result.inserted_id)
@@ -255,11 +258,8 @@ def create_auth_response(user: UserInDB) -> Token:
 # Helper function to authenticate user
 def authenticate_user(email: str, password: str) -> Optional[UserInDB]:
     user = get_user(email)
-    # user must exist, password must match, and account must be active/verified
+    # user must exist and password must match
     if not user or not verify_password(password, user.hashed_password):
-        return None
-    if not user.is_active or not user.is_verified:
-        # treat as not found so caller can provide generic message
         return None
     return user
 
@@ -304,11 +304,12 @@ def store_verification_token(user_id: str, token: str, expires_at: datetime):
         "token": token,
         "expires_at": expires_at,
         "created_at": datetime.utcnow(),
-        "is_active": True
+        "is_active": True,
+        "type": "email_verification_token"
     }
     if DATABASE_TYPE == "mongodb":
         if client is not None:
-            db.email_verification_tokens.insert_one(token_doc)
+            collection.insert_one(token_doc)
         else:
             coll = db('email_verification_tokens')
             coll.insert_one(token_doc)
@@ -322,10 +323,11 @@ def verify_email_token(token: str) -> bool:
     """
     if DATABASE_TYPE == "mongodb":
         if client is not None:
-            token_doc = db.email_verification_tokens.find_one({
+            token_doc = collection.find_one({
                 "token": token,
                 "is_active": True,
-                "expires_at": {"$gt": datetime.utcnow()}
+                "expires_at": {"$gt": datetime.utcnow()},
+                "type": "email_verification_token"
             })
         else:
             coll = db('email_verification_tokens')
@@ -338,12 +340,12 @@ def verify_email_token(token: str) -> bool:
             return False
         # mark token used and activate the user
         if client is not None:
-            db.email_verification_tokens.update_one(
+            collection.update_one(
                 {"_id": token_doc["_id"]},
                 {"$set": {"is_active": False}}
             )
-            db.users.update_one(
-                {"_id": ObjectId(token_doc["user_id"])},
+            collection.update_one(
+                {"_id": ObjectId(token_doc["user_id"]), "type": "user"},
                 {"$set": {"is_verified": True, "is_active": True}}
             )
         else:
@@ -368,9 +370,10 @@ def get_verification_token_for_user(email: str) -> Optional[str]:
         return None
     if DATABASE_TYPE == "mongodb":
         if client is not None:
-            token_doc = db.email_verification_tokens.find_one({
+            token_doc = collection.find_one({
                 "user_id": user.id,
-                "is_active": True
+                "is_active": True,
+                "type": "email_verification_token"
             })
         else:
             coll = db('email_verification_tokens')
@@ -390,13 +393,14 @@ def store_refresh_token(user_id: str, refresh_token: str, expires_at: datetime):
         "token": refresh_token,
         "expires_at": expires_at,
         "created_at": datetime.utcnow(),
-        "is_active": True
+        "is_active": True,
+        "type": "refresh_token"
     }
     if DATABASE_TYPE == "mongodb":
-        if client is not None:  # Using real MongoDB
-            result = db.refresh_tokens.insert_one(token_data)
+        if client is not None:
+            result = collection.insert_one(token_data)
             return result.inserted_id
-        else:  # Using mock database
+        else:
             refresh_tokens_collection = db('refresh_tokens')
             result = refresh_tokens_collection.insert_one(token_data)
             return result.inserted_id
@@ -406,13 +410,14 @@ def store_refresh_token(user_id: str, refresh_token: str, expires_at: datetime):
 def is_refresh_token_valid(refresh_token: str) -> bool:
     """Check if refresh token is valid and not expired"""
     if DATABASE_TYPE == "mongodb":
-        if client is not None:  # Using real MongoDB
-            token_doc = db.refresh_tokens.find_one({
+        if client is not None:
+            token_doc = collection.find_one({
                 "token": refresh_token,
                 "is_active": True,
-                "expires_at": {"$gt": datetime.utcnow()}
+                "expires_at": {"$gt": datetime.utcnow()},
+                "type": "refresh_token"
             })
-        else:  # Using mock database
+        else:
             refresh_tokens_collection = db('refresh_tokens')
             token_doc = refresh_tokens_collection.find_one({
                 "token": refresh_token,
@@ -426,12 +431,12 @@ def is_refresh_token_valid(refresh_token: str) -> bool:
 def invalidate_refresh_token(refresh_token: str):
     """Invalidate refresh token when used or on logout"""
     if DATABASE_TYPE == "mongodb":
-        if client is not None:  # Using real MongoDB
-            result = db.refresh_tokens.update_one(
-                {"token": refresh_token},
+        if client is not None:
+            result = collection.update_one(
+                {"token": refresh_token, "type": "refresh_token"},
                 {"$set": {"is_active": False}}
             )
-        else:  # Using mock database
+        else:
             refresh_tokens_collection = db('refresh_tokens')
             result = refresh_tokens_collection.update_one(
                 {"token": refresh_token},
@@ -469,9 +474,9 @@ def get_current_user(token: str = Depends(security)) -> UserInDB:
 # Update user subscription status
 def update_user_subscription(email: str, is_pro: bool, subscription_end: datetime):
     if DATABASE_TYPE == "mongodb":
-        if client is not None:  # Using real MongoDB
-            result = db.users.update_one(
-                {"email": email},
+        if client is not None:
+            result = collection.update_one(
+                {"email": email, "type": "user"},
                 {"$set": {
                     "is_pro": is_pro,
                     "subscription_end": subscription_end
@@ -501,9 +506,9 @@ def update_user_profile(email: str, first_name: Optional[str] = None, last_name:
         if bio is not None:
             update_data["bio"] = bio
 
-        if client is not None:  # Using real MongoDB
-            result = db.users.update_one(
-                {"email": email},
+        if client is not None:
+            result = collection.update_one(
+                {"email": email, "type": "user"},
                 {"$set": update_data}
             )
         else:  # Using mock database
@@ -519,9 +524,9 @@ def update_user_profile(email: str, first_name: Optional[str] = None, last_name:
 # Update user profile image
 def update_user_profile_image(email: str, profile_image_url: str):
     if DATABASE_TYPE == "mongodb":
-        if client is not None:  # Using real MongoDB
-            result = db.users.update_one(
-                {"email": email},
+        if client is not None:
+            result = collection.update_one(
+                {"email": email, "type": "user"},
                 {"$set": {"profile_image": profile_image_url}}
             )
         else:  # Using mock database
@@ -581,10 +586,11 @@ def create_api_key_for_user(user_id: str, key_name: str = "Default API Key"):
 
     # Insert the API key
     if DATABASE_TYPE == "mongodb":
-        if client is not None:  # Using real MongoDB
-            result = db.api_keys.insert_one(api_key_doc)
+        if client is not None:
+            api_key_doc['type'] = 'api_key'
+            result = collection.insert_one(api_key_doc)
             api_key_id = str(result.inserted_id)
-        else:  # Using mock database
+        else:
             api_keys_collection = db('api_keys')
             result = api_keys_collection.insert_one(api_key_doc)
             api_key_id = str(result.inserted_id)
@@ -598,9 +604,9 @@ def create_api_key_for_user(user_id: str, key_name: str = "Default API Key"):
 def get_api_keys_for_user(user_id: str):
     """Get all API keys for a user"""
     if DATABASE_TYPE == "mongodb":
-        if client is not None:  # Using real MongoDB
-            api_keys = list(db.api_keys.find({"user_id": user_id}))
-        else:  # Using mock database
+        if client is not None:
+            api_keys = list(collection.find({"user_id": user_id, "type": "api_key"}))
+        else:
             api_keys_collection = db('api_keys')
             api_keys = api_keys_collection.find({"user_id": user_id})
         return [APIKey(**key, id=str(key["_id"])) for key in api_keys]
@@ -625,9 +631,9 @@ def get_api_keys_for_user(user_id: str):
 def get_api_key_by_id(api_key_id: str, user_id: str) -> Optional[APIKey]:
     """Get a specific API key by ID for a user"""
     if DATABASE_TYPE == "mongodb":
-        if client is not None:  # Using real MongoDB
-            key_doc = db.api_keys.find_one({"_id": ObjectId(api_key_id), "user_id": user_id})
-        else:  # Using mock database
+        if client is not None:
+            key_doc = collection.find_one({"_id": ObjectId(api_key_id), "user_id": user_id, "type": "api_key"})
+        else:
             api_keys_collection = db('api_keys')
             key_doc = api_keys_collection.find_one({"_id": ObjectId(api_key_id), "user_id": user_id})
         if key_doc:
@@ -652,12 +658,12 @@ def get_api_key_by_id(api_key_id: str, user_id: str) -> Optional[APIKey]:
 def revoke_api_key(api_key_id: str, user_id: str) -> bool:
     """Revoke an API key"""
     if DATABASE_TYPE == "mongodb":
-        if client is not None:  # Using real MongoDB
-            result = db.api_keys.update_one(
-                {"_id": ObjectId(api_key_id), "user_id": user_id},
+        if client is not None:
+            result = collection.update_one(
+                {"_id": ObjectId(api_key_id), "user_id": user_id, "type": "api_key"},
                 {"$set": {"status": "revoked", "revoked_at": datetime.utcnow()}}
             )
-        else:  # Using mock database
+        else:
             api_keys_collection = db('api_keys')
             result = api_keys_collection.update_one(
                 {"_id": ObjectId(api_key_id), "user_id": user_id},
@@ -670,11 +676,11 @@ def revoke_api_key(api_key_id: str, user_id: str) -> bool:
 def delete_api_key(api_key_id: str, user_id: str) -> bool:
     """Delete an API key permanently"""
     if DATABASE_TYPE == "mongodb":
-        if client is not None:  # Using real MongoDB
-            result = db.api_keys.delete_one(
-                {"_id": ObjectId(api_key_id), "user_id": user_id}
+        if client is not None:
+            result = collection.delete_one(
+                {"_id": ObjectId(api_key_id), "user_id": user_id, "type": "api_key"}
             )
-        else:  # Using mock database
+        else:
             api_keys_collection = db('api_keys')
             result = api_keys_collection.delete_one(
                 {"_id": ObjectId(api_key_id), "user_id": user_id}
@@ -687,10 +693,10 @@ def get_user_by_api_key(api_key: str) -> Optional[UserInDB]:
     """Get user by API key"""
     if DATABASE_TYPE == "mongodb":
         # First, verify the API key
-        if client is not None:  # Using real MongoDB
-            api_key_doc = db.api_keys.find_one({"key": {"$exists": True}})
-            all_keys = db.api_keys.find({"status": "active"})
-        else:  # Using mock database
+        if client is not None:
+            api_key_doc = collection.find_one({"key": {"$exists": True}, "type": "api_key"})
+            all_keys = collection.find({"status": "active", "type": "api_key"})
+        else:
             api_keys_collection = db('api_keys')
             api_key_doc = api_keys_collection.find_one({"key": {"$exists": True}})
             all_keys = api_keys_collection.find({"status": "active"})
@@ -703,15 +709,14 @@ def get_user_by_api_key(api_key: str) -> Optional[UserInDB]:
 
         if found_key:
             # Update last used timestamp
-            if client is not None:  # Using real MongoDB
-                db.api_keys.update_one(
-                    {"_id": found_key["_id"]},
+            if client is not None:
+                collection.update_one(
+                    {"_id": found_key["_id"], "type": "api_key"},
                     {"$set": {"last_used_at": datetime.utcnow()}}
                 )
-
                 # Get the user
-                user_doc = db.users.find_one({"_id": ObjectId(found_key["user_id"])})
-            else:  # Using mock database
+                user_doc = collection.find_one({"_id": ObjectId(found_key["user_id"]), "type": "user"})
+            else:
                 api_keys_collection.update_one(
                     {"_id": found_key["_id"]},
                     {"$set": {"last_used_at": datetime.utcnow()}}
@@ -748,18 +753,18 @@ def get_user_by_api_key(api_key: str) -> Optional[UserInDB]:
 def validate_api_key(api_key: str) -> bool:
     """Validate if API key exists and is active"""
     if DATABASE_TYPE == "mongodb":
-        if client is not None:  # Using real MongoDB
-            all_keys = db.api_keys.find({"status": "active"})
-        else:  # Using mock database
+        if client is not None:
+            all_keys = collection.find({"status": "active", "type": "api_key"})
+        else:
             api_keys_collection = db('api_keys')
             all_keys = api_keys_collection.find({"status": "active"})
 
         for key_doc in all_keys:
             if pwd_context.verify(api_key, key_doc["key"]):
                 # Update last used timestamp
-                if client is not None:  # Using real MongoDB
-                    db.api_keys.update_one(
-                        {"_id": key_doc["_id"]},
+                if client is not None:
+                    collection.update_one(
+                        {"_id": key_doc["_id"], "type": "api_key"},
                         {"$set": {"last_used_at": datetime.utcnow()}}
                     )
                 else:  # Using mock database

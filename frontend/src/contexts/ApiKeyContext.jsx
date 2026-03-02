@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import axios from 'axios';
+import { useAuth } from './AuthContext';
 
 const ApiKeyContext = createContext();
 
@@ -14,12 +15,17 @@ export const useApiKey = () => {
 export const ApiKeyProvider = ({ children }) => {
   const [apiKeys, setApiKeys] = useState([]);
   const [loading, setLoading] = useState(false);
+  const { token } = useAuth();
+
+  // Helper to get auth headers
+  const getAuthHeaders = () =>
+    token ? { Authorization: `Bearer ${token}` } : {};
 
   const createApiKey = async (name = 'Default API Key') => {
     try {
       setLoading(true);
-      const response = await axios.post('/api/keys', { name });
-      const newKey = response.data.api_key; // This should be the unhashed key
+      const response = await axios.post('/api/keys', { name }, { headers: getAuthHeaders() });
+      const newKey = response.data.api_key;
 
       // Fetch all keys again to update the list
       await fetchApiKeys();
@@ -38,7 +44,7 @@ export const ApiKeyProvider = ({ children }) => {
   const fetchApiKeys = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/keys');
+      const response = await axios.get('/api/keys', { headers: getAuthHeaders() });
       setApiKeys(response.data.api_keys || []);
       return { success: true, apiKeys: response.data.api_keys || [] };
     } catch (error) {
@@ -54,7 +60,7 @@ export const ApiKeyProvider = ({ children }) => {
   const revokeApiKey = async (apiKeyId) => {
     try {
       setLoading(true);
-      await axios.post(`/api/keys/revoke/${apiKeyId}`);
+      await axios.post(`/api/keys/revoke/${apiKeyId}`, {}, { headers: getAuthHeaders() });
       await fetchApiKeys(); // Refresh the list after revoking
       return { success: true };
     } catch (error) {

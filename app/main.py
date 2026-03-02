@@ -1,3 +1,4 @@
+# Resend verification email endpoint
 """
 Image Processing API - FastAPI Application
 Provides multiple endpoints for image processing:
@@ -16,7 +17,7 @@ import glob
 import uuid
 from pathlib import Path
 from typing import Optional
-from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Depends, Query
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Depends, Query, Body
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -55,7 +56,8 @@ from auth import (
     create_auth_response, Token, RefreshTokenRequest, create_refresh_token,
     is_refresh_token_valid, invalidate_refresh_token, security,
     create_api_key_for_user, get_api_keys_for_user, get_api_key_by_id,
-    revoke_api_key, delete_api_key, APIKey, require_api_key
+    revoke_api_key, delete_api_key, APIKey, require_api_key,
+    EMAIL_SERVICE_AVAILABLE, email_service, SECRET_KEY, ALGORITHM, verify_email_token
 )
 from payment import create_payment_intent, create_subscription, verify_payment_status, PaymentIntentCreate, SubscriptionCreate
 import stripe
@@ -4351,17 +4353,6 @@ async def register_api(user_data: UserRegister):
     return await register(user_data)
 # ------------------------------------------------------------------
 # email verification endpoint
-@app.get("/auth/verify-email")
-async def verify_email(token: str):
-    """Endpoint hit by link sent to user in verification email."""
-    if verify_email_token(token):
-        return {"message": "Email successfully verified, you may now log in."}
-    raise HTTPException(status_code=400, detail="Invalid or expired verification token")
-
-@app.get("/api/auth/verify-email")
-async def verify_email_api(token: str):
-    return await verify_email(token)
-
 
 @app.get("/auth/login")
 async def show_login_form():
@@ -4377,9 +4368,28 @@ async def show_login_form():
     from fastapi.responses import RedirectResponse
     return RedirectResponse(url=f"{frontend_url}/login")
 
+
+# Existing GET endpoint
 @app.get("/api/auth/login")
 async def show_login_form_api():
     return await show_login_form()
+
+# Add POST endpoint to match frontend
+@app.post("/api/auth/login")
+async def login_api(user_data: UserLogin):
+    """Login user and return access and refresh tokens (API version)"""
+    user = authenticate_user(user_data.email, user_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password or account not verified",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Create authentication response with both tokens
+    access_token = create_access_token(user.email)
+    refresh_token = create_refresh_token(user.email)
+    return {"access_token": access_token, "refresh_token": refresh_token}
 
 @app.options("/auth/login")
 async def options_login():
@@ -4571,6 +4581,7 @@ async def upload_profile_image(
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Profile image update failed: {str(e)}")
+
 
 
 # Payment endpoints

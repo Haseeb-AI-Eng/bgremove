@@ -238,6 +238,7 @@ const SignupPage = () => {
                 )}
               </button>
             </div>
+
           </form>
 
           <div className="mt-6">
