@@ -4354,7 +4354,6 @@ async def register_api(user_data: UserRegister):
 # ------------------------------------------------------------------
 # email verification endpoint
 
-
 @app.get("/auth/login")
 async def show_login_form():
     """
