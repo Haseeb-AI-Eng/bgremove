@@ -7,58 +7,96 @@ const DocumentTitle = () => {
   const { t } = useLanguage();
 
   useEffect(() => {
-    // Define page titles using the brand name from translations
-    const getPageTitle = () => {
+    // Define page titles and descriptions using translations
+    const updateMetadata = () => {
       const brandName = t('brandName');
+      let title = brandName;
+      let description = t('seoDescription');
+
       switch(location.pathname) {
         case '/':
-          return brandName;
+          title = t('seoTitle');
+          description = t('seoDescription');
+          break;
         case '/services':
-          return `Services - ${brandName}`;
+          title = `${t('services')} - ${brandName}`;
+          break;
         case '/pricing':
-          return `Pricing - ${brandName}`;
+          title = `${t('pricing')} - ${brandName}`;
+          break;
         case '/dashboard':
-          return `Dashboard - ${brandName}`;
+          title = `${t('dashboard')} - ${brandName}`;
+          break;
         case '/login':
-          return `Login - ${brandName}`;
+          title = `${t('login')} - ${brandName}`;
+          break;
         case '/signup':
-          return `Sign Up - ${brandName}`;
+          title = `${t('signUp')} - ${brandName}`;
+          break;
         case '/gallery':
-          return `Gallery - ${brandName}`;
+          title = `${t('gallery')} - ${brandName}`;
+          break;
         case '/auto-agent':
-          return `Auto Agent - ${brandName}`;
+          title = `${t('aiAutoAgentTitle')} - ${brandName}`;
+          break;
         case '/payment':
-          return `Payment - ${brandName}`;
+          title = `Zahlung - ${brandName}`;
+          break;
         case '/services/image-processing':
-          return `Image Processing - ${brandName}`;
+          title = `${t('imageProcessing')} - ${brandName}`;
+          break;
         case '/services/cv-generator':
-          return `CV Generator - ${brandName}`;
+          title = `${t('aiCvGenerator')} - ${brandName}`;
+          break;
         case '/services/color-palette':
-          return `Color Palette - ${brandName}`;
+          title = `${t('colorPaletteGenerator')} - ${brandName}`;
+          break;
         case '/services/object-detection':
-          return `Object Detection - ${brandName}`;
+          title = `${t('objectDetectionTool')} - ${brandName}`;
+          break;
         case '/services/image-upscaler':
-          return `Image Upscaler - ${brandName}`;
+          title = `${t('imageUpscaler')} - ${brandName}`;
+          break;
         case '/services/background-blur':
-          return `Background Blur - ${brandName}`;
+          title = `${t('backgroundBlur')} - ${brandName}`;
+          break;
         case '/services/image-editing':
-          return `Image Editing - ${brandName}`;
+          title = `${t('imageEditingSuite')} - ${brandName}`;
+          break;
         case '/services/face-detection':
-          return `Face Detection - ${brandName}`;
+          title = `${t('faceDetection')} - ${brandName}`;
+          break;
         case '/services/metadata-analyzer':
-          return `Metadata Analyzer - ${brandName}`;
+          title = `${t('imageMetadataAnalyzer')} - ${brandName}`;
+          break;
         case '/services/format-converter':
-          return `Format Converter - ${brandName}`;
+          title = `${t('formatConverter')} - ${brandName}`;
+          break;
         case '/services/watermark-removal':
-          return `Watermark Removal - ${brandName}`;
+          title = `${t('watermarkRemoval')} - ${brandName}`;
+          break;
         case '/services/image-enhancement':
-          return `Image Enhancement - ${brandName}`;
+          title = `${t('quality')} - ${brandName}`;
+          break;
         default:
-          return brandName;
+          title = brandName;
+      }
+
+      document.title = title;
+      
+      // Update meta description
+      const metaDescription = document.querySelector('meta[name="description"]');
+      if (metaDescription) {
+        metaDescription.setAttribute('content', description);
+      } else {
+        const meta = document.createElement('meta');
+        meta.name = 'description';
+        meta.content = description;
+        document.head.appendChild(meta);
       }
     };
 
-    document.title = getPageTitle();
+    updateMetadata();
   }, [location, t]);
 
   return null;

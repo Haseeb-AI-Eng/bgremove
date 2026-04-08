@@ -504,6 +504,21 @@ async def health_check():
     return {"status": "healthy"}
 
 
+@app.get("/api/verify-email")
+async def verify_email(token: str = Query(...)):
+    """
+    Verify a user's email address using the provided token.
+    """
+    success = await verify_email_token(token)
+    if success:
+        return {"status": "success", "message": "Email successfully verified. You can now log in."}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired verification token."
+        )
+
+
 @app.get("/api/gallery/images")
 async def get_gallery_images(current_user: UserInDB = Depends(get_current_user)):
     """
@@ -4280,7 +4295,7 @@ async def refresh_token(request: RefreshTokenRequest):
         )
 
     # Get user
-    user = get_user(email=email)
+    user = await get_user(email=email)
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -4289,10 +4304,10 @@ async def refresh_token(request: RefreshTokenRequest):
         )
 
     # Invalidate the old refresh token
-    invalidate_refresh_token(request.refresh_token)
+    await invalidate_refresh_token(request.refresh_token)
 
     # Create new tokens
-    auth_response = create_auth_response(user)
+    auth_response = await create_auth_response(user)
 
     return {
         "access_token": auth_response.access_token,
@@ -4333,7 +4348,7 @@ async def register(user_data: UserRegister):
     attempt to login automatically.
     """
     try:
-        user = create_user(user_data)
+        user = await create_user(user_data)
         return {
             "message": "User registered successfully. Please check your inbox and verify your email address before logging in."
         }
@@ -4351,6 +4366,43 @@ async def options_register_api():
 @app.post("/api/auth/register")
 async def register_api(user_data: UserRegister):
     return await register(user_data)
+
+@app.get("/api/auth/verify-email")
+async def verify_email_api(token: str = Query(...)):
+    """Verify user email using the provided token."""
+    success = await verify_email_token(token)
+    if success:
+        return {"message": "Email verified successfully. You can now log in."}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired verification token."
+        )
+
+@app.post("/api/auth/resend-verification")
+async def resend_verification(email: str = Body(..., embed=True)):
+    """Resend verification email to the user."""
+    user = await get_user(email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if user.is_verified:
+        return {"message": "User is already verified."}
+    
+    from auth import generate_verification_token
+    token = generate_verification_token(user.id)
+    
+    if EMAIL_SERVICE_AVAILABLE and email_service:
+        try:
+            email_service.send_verification_email(
+                to_email=user.email,
+                verification_token=token
+            )
+            return {"message": "Verification email resent successfully."}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+    else:
+        return {"message": "Email service not available, but token generated for testing.", "token": token}
 # ------------------------------------------------------------------
 # email verification endpoint
 
@@ -4378,11 +4430,21 @@ async def show_login_form_api():
 @app.post("/api/auth/login")
 async def login_api(user_data: UserLogin):
     """Login user and return access and refresh tokens (API version)"""
-    user = authenticate_user(user_data.email, user_data.password)
-    if not user:
+    try:
+        user = await authenticate_user(user_data.email, user_data.password)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    except HTTPException as e:
+        # Re-raise the 403 Forbidden for unverified users
+        if e.status_code == status.HTTP_403_FORBIDDEN:
+             raise e
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password or account not verified",
+            detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -4399,16 +4461,26 @@ async def options_login():
 @app.post("/auth/login")
 async def login(user_data: UserLogin):
     """Login user and return access and refresh tokens"""
-    user = authenticate_user(user_data.email, user_data.password)
-    if not user:
+    try:
+        user = await authenticate_user(user_data.email, user_data.password)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    except HTTPException as e:
+        # Re-raise the 403 Forbidden for unverified users
+        if e.status_code == status.HTTP_403_FORBIDDEN:
+             raise e
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password or account not verified",
+            detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
     # Create authentication response with both tokens
-    auth_response = create_auth_response(user)
+    auth_response = await create_auth_response(user)
 
     return {
         "access_token": auth_response.access_token,
@@ -4478,7 +4550,7 @@ async def update_profile(
 ):
     """Update user profile information"""
     try:
-        success = update_user_profile(
+        success = await update_user_profile(
             email=current_user.email,
             first_name=profile_data.first_name,
             last_name=profile_data.last_name,
@@ -4487,7 +4559,7 @@ async def update_profile(
 
         if success:
             # Return updated user data
-            updated_user = get_user(current_user.email)
+            updated_user = await get_user(current_user.email)
             return {
                 "message": "Profile updated successfully",
                 "user": {
@@ -4553,14 +4625,14 @@ async def upload_profile_image(
         # Using relative path that will be served by the mounted static files
         image_url = f"/uploads/{unique_filename}"
 
-        success = update_user_profile_image(
+        success = await update_user_profile_image(
             email=current_user.email,
             profile_image_url=image_url
         )
 
         if success:
             # Return updated user data like the update_profile endpoint
-            updated_user = get_user(current_user.email)
+            updated_user = await get_user(current_user.email)
             return {
                 "message": "Profile image updated successfully",
                 "profile_image": image_url,
@@ -4618,7 +4690,7 @@ async def create_pro_subscription(
         # Update user in database to mark as pro
         # Calculate subscription end date (e.g. 30 days for demo)
         subscription_end = datetime.utcnow() + timedelta(days=30)
-        update_user_subscription(current_user.email, True, subscription_end)
+        await update_user_subscription(current_user.email, True, subscription_end)
 
         return subscription
     except HTTPException as e:
@@ -5269,7 +5341,7 @@ async def create_api_key_endpoint(
         body = await request.json()
         key_name = body.get("name", "Default API Key")
 
-        api_key, api_key_id = create_api_key_for_user(current_user.id, key_name)
+        api_key, api_key_id = await create_api_key_for_user(current_user.id, key_name)
         return {
             "api_key": api_key,
             "api_key_id": api_key_id,
@@ -5283,7 +5355,7 @@ async def create_api_key_endpoint(
 async def list_api_keys(current_user: UserInDB = Depends(get_current_user)):
     """List all API keys for the user"""
     try:
-        api_keys = get_api_keys_for_user(current_user.id)
+        api_keys = await get_api_keys_for_user(current_user.id)
         # Format response to hide the actual key and only show prefix
         formatted_keys = []
         for key in api_keys:
@@ -5308,7 +5380,7 @@ async def revoke_api_key_endpoint(
 ):
     """Revoke an API key"""
     try:
-        success = revoke_api_key(key_id, current_user.id)
+        success = await revoke_api_key(key_id, current_user.id)
         if success:
             return {"message": "API key revoked successfully"}
         else:
@@ -5324,7 +5396,7 @@ async def delete_api_key_endpoint(
 ):
     """Delete an API key"""
     try:
-        success = delete_api_key(key_id, current_user.id)
+        success = await delete_api_key(key_id, current_user.id)
         if success:
             return {"message": "API key deleted successfully"}
         else:
@@ -5362,7 +5434,7 @@ async def stripe_webhook(request: Request):
         if customer_email:
             # Update the user's subscription status in the database
             subscription_end = datetime.utcnow() + timedelta(days=30)  # 30-day subscription
-            update_user_subscription(customer_email, True, subscription_end)
+            await update_user_subscription(customer_email, True, subscription_end)
 
     return {"success": True}
 

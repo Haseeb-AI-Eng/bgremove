@@ -87,7 +87,7 @@ const PricingPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-slate-50 py-20">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-12">
@@ -104,10 +104,10 @@ const PricingPage = () => {
           {plans.map((plan, index) => (
             <div
               key={index}
-              className={`relative rounded-2xl p-8 ${
+              className={`relative rounded-3xl p-8 transition-all duration-300 ${
                 plan.mostPopular 
-                  ? `${getColorClasses(plan.color, 'border')} border-2 shadow-xl` 
-                  : 'bg-white border border-gray-200 shadow-sm'
+                  ? 'bg-white border-2 border-indigo-500 shadow-premium scale-105 z-10' 
+                  : 'bg-white border border-slate-200 shadow-md hover:shadow-xl'
               }`}
             >
               {plan.mostPopular && (
@@ -126,10 +126,10 @@ const PricingPage = () => {
                 
                 <Link
                   to={plan.name === t('pro') ? '/payment' : plan.name === t('enterprise') ? '/contact' : '/signup'}
-                  className={`w-full py-3 px-6 rounded-lg font-semibold transition-colors ${
+                  className={`btn w-full ${
                     plan.mostPopular
-                      ? `${getColorClasses(plan.color, 'bg')} text-white hover:opacity-90`
-                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                      ? 'btn-primary'
+                      : 'btn-secondary opacity-90'
                   }`}
                 >
                   {plan.cta}

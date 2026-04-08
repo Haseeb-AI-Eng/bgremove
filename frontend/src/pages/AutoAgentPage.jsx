@@ -22,7 +22,7 @@ const AutoAgentPage = () => {
     const file = e.target.files[0];
     if (file) {
       if (!file.type.match('image.*')) {
-        toast.error('Please select a valid image file');
+        toast.error(t('selectValidImage'));
         return;
       }
 
@@ -40,12 +40,12 @@ const AutoAgentPage = () => {
     e.preventDefault();
     
     if (!selectedImage) {
-      toast.error('Please select an image first');
+      toast.error(t('selectImageFirst'));
       return;
     }
     
     if (!instruction.trim()) {
-      toast.error('Please enter an instruction');
+      toast.error(t('enterInstruction'));
       return;
     }
 
@@ -72,10 +72,10 @@ const AutoAgentPage = () => {
       // Convert the response to a URL for display
       const imageUrl = URL.createObjectURL(response.data);
       setResultImage(imageUrl);
-      toast.success('Image processed successfully!');
+      toast.success(t('imageProcessedSuccessfully'));
     } catch (error) {
       console.error('Error processing image:', error);
-      toast.error('Error processing image. Please try again.');
+      toast.error(t('errorProcessingImage'));
     } finally {
       setIsLoading(false);
       setIsProcessing(false);
@@ -100,10 +100,10 @@ const AutoAgentPage = () => {
         >
           <div className="text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
-              AI Auto Agent
+              {t('aiAutoAgentTitle')}
             </h1>
             <p className="text-gray-600">
-              Upload an image and give the AI natural language instructions. Our intelligent agent will analyze your request and perform the appropriate image processing tasks.
+              {t('aiAutoAgentDescription')}
             </p>
           </div>
 
@@ -111,7 +111,7 @@ const AutoAgentPage = () => {
             {/* Image Upload Section */}
             <div className="space-y-4">
               <label className="block text-lg font-medium text-gray-700">
-                Upload Image
+                {t('uploadImage')}
               </label>
               
               <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-indigo-400 transition-colors">
@@ -119,7 +119,7 @@ const AutoAgentPage = () => {
                   <div className="flex flex-col items-center">
                     <img
                       src={imagePreview}
-                      alt="Preview"
+                      alt={t('imagePreviewAlt')}
                       className="max-h-64 object-contain rounded-lg mb-4"
                     />
                     <p className="text-sm text-gray-500 mb-2">
@@ -130,14 +130,14 @@ const AutoAgentPage = () => {
                       onClick={() => setSelectedImage(null)}
                       className="text-red-500 hover:text-red-700 flex items-center"
                     >
-                      <FiX className="mr-1" /> Remove
+                      <FiX className="mr-1" /> {t('remove')}
                     </button>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center">
                     <FiImage className="w-12 h-12 text-gray-400 mb-4" />
-                    <p className="text-gray-600 mb-2">Click to upload an image</p>
-                    <p className="text-sm text-gray-500">PNG, JPG, JPEG (Max 10MB)</p>
+                    <p className="text-gray-600 mb-2">{t('clickToUpload')}</p>
+                    <p className="text-sm text-gray-500">{t('supportedFormats')}</p>
                   </div>
                 )}
                 

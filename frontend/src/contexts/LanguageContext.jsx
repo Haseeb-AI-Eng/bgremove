@@ -52,8 +52,8 @@ const translations = {
     welcome: 'Welcome',
     hi: 'Hi',
     pro: 'PRO',
-    worldClassAISolutions: 'World-class AI solutions for enterprise businesses. Transform your workflow with cutting-edge artificial intelligence.',
-    exploreOurSuite: 'Explore our comprehensive suite of AI services designed to solve real-world problems and enhance your productivity.',
+    worldClassAISolutions: 'World-class AI solutions. Transform your workflow.',
+    exploreOurSuite: 'Explore our AI services designed to enhance your productivity.',
     serviceCategories: 'Service Categories',
     imageProcessing: 'Image Processing',
     advancedTools: 'Advanced tools for image enhancement, background removal, and manipulation.',
@@ -230,6 +230,70 @@ const translations = {
     accuracy: '99.9% Accuracy',
     precisionAI: 'Precision AI technology delivers professional-quality results',
     support: 'Support',
+    quality: 'Quality',
+    seoTitle: 'Free Background Remover - Professional AI Tool for Perfect Images',
+    seoDescription: 'Remove backgrounds for free! Use our AI to precisely remove backgrounds in seconds. Ideal for professionals & beginners. Start now online!',
+    altBefore: 'Original photo before background removal',
+    altAfter: 'Processed photo with background removed by AI',
+    brandName: 'Hintergrund entfernen',
+    seoContentH1: 'Professional Background Removal Made Easy',
+    seoContentP1: 'Our innovative AI tool makes removing backgrounds easier than ever. Whether for e-commerce, private snapshots, or professional design projects – isolate your main subject precisely and quickly with just one click. Manual clipping is a thing of the past, as our AI detects fine details like hair or complex edges automatically.',
+    seoContentH2_1: 'Why Professional Background Removal is Crucial',
+    seoContentP2: 'In today\'s visual world, first impressions are everything. A clean, transparent background makes your products look higher quality and focuses the customer\'s attention on the essentials. Efficient background removal saves valuable time in post-processing and allows you to use your graphics flexibly across various channels. From Instagram posts to professional catalogs – the possibilities are endless.',
+    seoContentH2_2: 'How our Tool Works for Perfect Results',
+    seoContentP3: 'Removing backgrounds online requires no technical knowledge with us. Simply upload your desired image in JPG, PNG, or WebP format. Our powerful AI analyzes the photo in seconds and delivers a perfect result with a transparent background. You can download the image immediately or add a new, creative background. Our goal is to provide you with a tool that combines high precision with maximum speed, so you can focus entirely on your creativity. Start now and experience how easy modern background removal can be!',
+    keywords: [
+      'hintergrund entfernen kostenlos',
+      'hintergrund entfernen bild',
+      'hintergrund entfernen online',
+      'hintergrund entfernen photoshop',
+      'hintergrund entfernen kostenlos online',
+      'hintergrund entfernen png',
+      'Hintergründe aus Bildern entfernen'
+    ],
+    faqTitle: 'Frequently Asked Questions (FAQ) - Remove Background',
+    faqs: [
+      {
+        question: 'What is Hintergrund entfernen?',
+        answer: 'Hintergrund entfernen is an AI-powered tool that allows you to remove backgrounds from your photos quickly and precisely. It’s ideal for e-commerce, portraits, and creative projects.'
+      },
+      {
+        question: 'How do I remove the background of a photo?',
+        answer: 'Simply upload your image to our platform. Our advanced AI automatically detects the main subject and removes the background within seconds.'
+      },
+      {
+        question: 'Is it free to use?',
+        answer: 'Yes, we offer a free basic version that allows you to remove backgrounds and achieve high-quality results. For additional features, we also offer Pro plans.'
+      },
+      {
+        question: 'Which file formats are supported?',
+        answer: 'We support all common formats such as JPG, PNG, JPEG, and WebP.'
+      },
+      {
+        question: 'How long does it take to process a photo?',
+        answer: 'Thanks to our optimized AI algorithms, processing usually takes less than 5 seconds.'
+      },
+      {
+        question: 'Can I process multiple photos at once?',
+        answer: 'In our current version, we process photos individually to ensure maximum precision. However, we are constantly working on new features.'
+      },
+      {
+        question: 'How do I save my edited photos?',
+        answer: 'Once processing is complete, you can click the "Download" button to save your photo with a transparent background in PNG format.'
+      },
+      {
+        question: 'Is there a mobile app for Hintergrund entfernen?',
+        answer: 'Hintergrund entfernen is optimized for web use and works excellently on all mobile browsers, so no app installation is required.'
+      },
+      {
+        question: 'Are my uploaded photos safe?',
+        answer: 'Yes, security is our top priority. Your photos are transmitted encrypted and automatically deleted from our servers after processing.'
+      },
+      {
+        question: 'How do I contact support?',
+        answer: 'If you have questions or suggestions, you can reach our support team via the contact form on our website.'
+      }
+    ],
   },
   es: {
     // Navigation
@@ -459,6 +523,70 @@ const translations = {
     accuracy: 'Precisión del 99.9%',
     precisionAI: 'La tecnología de IA de precisión entrega resultados de calidad profesional',
     support: 'Soporte',
+    quality: 'Calidad',
+    seoTitle: 'Quitar fondo gratis - Herramienta IA para imágenes perfectas',
+    seoDescription: '¡Quitar fondo gratis ahora! Con nuestra IA, elimina fondos con precisión en segundos. Ideal para profesionales y principiantes. ¡Empieza online!',
+    altBefore: 'Foto original antes de quitar el fondo',
+    altAfter: 'Foto procesada con fondo quitado por IA',
+    brandName: 'Hintergrund entfernen',
+    seoContentH1: 'Eliminar el fondo de forma profesional es fácil',
+    seoContentP1: 'Nuestra innovadora herramienta de IA hace que eliminar fondos sea más fácil que nunca. Ya sea para comercio electrónico, fotos privadas o proyectos de diseño profesional: aísle su tema principal con precisión und rapidez con un solo clic. El recorte manual es cosa del pasado, ya que nuestra IA detecta automáticamente detalles finos como el cabello o bordes complejos.',
+    seoContentH2_1: 'Por qué es crucial eliminar el fondo de forma profesional',
+    seoContentP2: 'En el mundo visual de hoy, la primera impresión lo es todo. Un fondo limpio und transparente hace que sus productos se vean de mayor calidad und enfoca la atención del cliente en lo esencial. La eliminación eficiente del fondo ahorra tiempo valioso en el posprocesamiento und le permite utilizar sus gráficos de manera flexible en varios canales. Desde publicaciones de Instagram hasta catálogos profesionales: las posibilidades son infinitas.',
+    seoContentH2_2: 'Cómo funciona nuestra herramienta para obtener resultados perfectos',
+    seoContentP3: 'Eliminar fondos online no requiere conocimientos técnicos con nosotros. Simplemente suba su imagen deseada en formato JPG, PNG o WebP. Nuestra potente IA analiza la foto en segundos und ofrece un resultado perfecto con un fondo transparente. Puede descargar la imagen de inmediato o agregar un fondo nuevo und creativo. Nuestro objetivo es brindarle una herramienta que combine alta precisión con la máxima velocidad, para que pueda concentrarse por completo en su creatividad. ¡Empiece ahora und experimente lo fácil que puede ser eliminar fondos modernos!',
+    keywords: [
+      'hintergrund entfernen kostenlos',
+      'hintergrund entfernen bild',
+      'hintergrund entfernen online',
+      'hintergrund entfernen photoshop',
+      'hintergrund entfernen kostenlos online',
+      'hintergrund entfernen png',
+      'Hintergründe aus Bildern entfernen'
+    ],
+    faqTitle: 'Preguntas Frecuentes (FAQ) - Eliminar Fondo',
+    faqs: [
+      {
+        question: '¿Qué es Hintergrund entfernen?',
+        answer: 'Hintergrund entfernen es una herramienta impulsada por IA que te permite eliminar fondos de tus fotos de forma rápida y precisa. Es ideal para comercio electrónico, retratos y proyectos creativos.'
+      },
+      {
+        question: '¿Cómo elimino el fondo de una foto?',
+        answer: 'Simplemente sube tu imagen a nuestra plataforma. Nuestra IA avanzada detecta automáticamente el sujeto principal y elimina el fondo en cuestión de segundos.'
+      },
+      {
+        question: '¿Es de uso gratuito?',
+        answer: 'Sí, ofrecemos una versión básica gratuita que te permite eliminar fondos y obtener resultados de alta calidad. Para funciones adicionales, también ofrecemos planes Pro.'
+      },
+      {
+        question: '¿Qué formatos de archivo son compatibles?',
+        answer: 'Soportamos todos los formatos comunes como JPG, PNG, JPEG y WebP.'
+      },
+      {
+        question: '¿Cuánto tiempo se tarda en procesar una foto?',
+        answer: 'Gracias a nuestros algoritmos de IA optimizados, el procesamiento suele tardar menos de 5 segundos.'
+      },
+      {
+        question: '¿Puedo procesar varias fotos a la vez?',
+        answer: 'En nuestra versión actual, procesamos las fotos individualmente para garantizar la máxima precisión. Sin embargo, estamos trabajando constantemente en nuevas funciones.'
+      },
+      {
+        question: '¿Cómo guardo mis fotos editadas?',
+        answer: 'Una vez finalizado el procesamiento, puedes hacer clic en el botón "Descargar" para guardar tu foto con fondo transparente en formato PNG.'
+      },
+      {
+        question: '¿Existe una aplicación móvil para Hintergrund entfernen?',
+        answer: 'Hintergrund entfernen está optimizado para su uso en la web y funciona excelentemente en todos los navegadores móviles, por lo que no es necesario instalar ninguna aplicación.'
+      },
+      {
+        question: '¿Son seguras mis fotos subidas?',
+        answer: 'Sí, la seguridad es nuestra prioridad. Tus fotos se transmiten encriptadas y se eliminan automáticamente de nuestros servidores después del procesamiento.'
+      },
+      {
+        question: '¿Cómo me pongo en contacto con el soporte?',
+        answer: 'Si tienes preguntas o sugerencias, puedes comunicarte con nuestro equipo de soporte a través del formulario de contacto en nuestro sitio web.'
+      }
+    ],
   },
   de: {
     // Navigation
@@ -510,8 +638,8 @@ const translations = {
     welcome: 'Willkommen',
     hi: 'Hallo',
     pro: 'PRO',
-    worldClassAISolutions: 'Weltklasse KI-Lösungen für Unternehmen. Transformieren Sie Ihren Arbeitsablauf mit modernster künstlicher Intelligenz.',
-    exploreOurSuite: 'Entdecken Sie unsere umfassende Suite an KI-Diensten, die darauf ausgelegt sind, reale Probleme zu lösen und Ihre Produktivität zu steigern.',
+    worldClassAISolutions: 'Weltklasse KI-Lösungen.',
+    exploreOurSuite: 'Entdecken Sie unsere KI-Dienste zur Steigerung Ihrer Produktivität.',
     serviceCategories: 'Dienstleistungskategorien',
     imageProcessing: 'Bildverarbeitung',
     advancedTools: 'Fortgeschrittene Tools zur Bildverbesserung, Hintergrundentfernung und Manipulation.',
@@ -630,6 +758,71 @@ const translations = {
     startFreeTrial: 'Kostenlose Testversion starten',
     exploreServices: 'Dienste erkunden',
     brandName: 'Hintergrund entfernen',
+    seoContentH1: 'Professionelles Hintergrundentfernen leicht gemacht',
+    seoContentP1: 'Unser innovatives KI-Tool macht das Hintergrundentfernen so einfach wie nie zuvor. Egal ob für den E-Commerce, private Schnappschüsse oder professionelle Design-Projekte – mit nur einem Klick isolieren Sie Ihr Hauptmotiv präzise und schnell. Das manuelle Ausschneiden gehört der Vergangenheit an, denn unsere künstliche Intelligenz erkennt feinste Details wie Haare oder komplexe Kanten vollautomatisch. Dies spart Ihnen nicht nur Zeit, sondern garantiert auch eine Qualität, die sonst nur Profi-Grafiker mit stundenlanger Arbeit erreichen würden.',
+    seoContentH2_1: 'Warum die professionelle Hintergrundentfernung entscheidend ist',
+    seoContentP2: 'In der heutigen visuellen Welt ist der erste Eindruck alles. Ein sauberer, transparenter Hintergrund lässt Ihre Produkte hochwertiger wirken und lenkt den Fokus der Kunden direkt auf das Wesentliche. Durch effizientes Hintergrundentfernen sparen Sie wertvolle Zeit in der Nachbearbeitung und können Ihre Grafiken flexibel auf verschiedenen Kanälen einsetzen. Von Instagram-Posts bis hin zu professionellen Katalogen – die Einsatzmöglichkeiten sind grenzenlos. Ein neutraler Hintergrund ist zudem die Basis für ein konsistentes Branding, das Vertrauen bei Ihrer Zielgruppe schafft und Ihre Marke nachhaltig stärkt.',
+    seoContentH2_2: 'So einfach funktioniert unser Tool für perfekte Ergebnisse',
+    seoContentP3: 'Das Online-Hintergrundentfernen erfordert bei uns keine technischen Vorkenntnisse. Laden Sie einfach Ihr gewünschtes Bild im Format JPG, PNG oder WebP hoch. Unsere leistungsstarke KI analysiert das Foto in Sekundenbruchteilen und liefert Ihnen ein perfektes Ergebnis mit transparentem Hintergrund. Danach können Sie das Bild sofort herunterladen oder einen neuen, kreativen Hintergrund hinzufügen. Unser Ziel ist es, Ihnen ein Werkzeug an die Hand zu geben, das höchste Präzision mit maximaler Geschwindigkeit vereint, damit Sie sich ganz auf Ihre Kreativität konzentrieren können. Dabei legen wir größten Wert auf Datenschutz: Ihre hochgeladenen Bilder werden verschlüsselt verarbeitet und nach der Bearbeitung automatisch gelöscht. Starten Sie jetzt und erleben Sie, wie mühelos modernes Hintergrundentfernen sein kann! Profitieren Sie von einer Technologie, die ständig weiterentwickelt wird, um Ihnen immer die besten Resultate am Markt zu bieten.',
+    keywords: [
+      'hintergrund entfernen kostenlos',
+      'hintergrund entfernen bild',
+      'hintergrund entfernen online',
+      'hintergrund entfernen photoshop',
+      'hintergrund entfernen kostenlos online',
+      'hintergrund entfernen png',
+      'Hintergründe aus Bildern entfernen',
+      'Bild freistellen',
+      'Foto Hintergrund löschen',
+      'KI Hintergrundentferner'
+    ],
+    seoTitle: 'Kostenlos Hintergrundentfernen - KI-Tool für perfekte Bilder',
+    seoDescription: 'Jetzt kostenlos Hintergrundentfernen! Mit unserer KI entfernen Sie Hintergründe präzise in Sekunden. Ideal für Profis & Einsteiger. Starten Sie jetzt online!',
+    altBefore: 'Originalfoto vor dem Hintergrundentfernen',
+    altAfter: 'Bearbeitetes Foto mit entferntem Hintergrund durch KI',
+    faqTitle: 'Häufig gestellte Fragen (FAQ) - Hintergrund entfernen',
+    faqs: [
+      {
+        question: 'Was ist Hintergrund entfernen?',
+        answer: 'Hintergrund entfernen ist ein KI-gestütztes Tool, mit dem Sie Hintergründe aus Ihren Fotos schnell und präzise entfernen können. Es ist ideal für E-Commerce, Porträts und kreative Projekte.'
+      },
+      {
+        question: 'Wie entferne ich den Hintergrund eines Fotos?',
+        answer: 'Laden Sie einfach Ihr Bild auf unserer Plattform hoch. Unsere fortschrittliche KI erkennt das Hauptmotiv automatisch und entfernt den Hintergrund innerhalb von Sekunden.'
+      },
+      {
+        question: 'Ist die Nutzung kostenlos?',
+        answer: 'Ja, wir bieten eine kostenlose Basisversion an, mit der Sie Hintergründe entfernen und hochwertige Ergebnisse erzielen können. Für zusätzliche Funktionen bieten wir auch Pro-Pläne an.'
+      },
+      {
+        question: 'Welche Dateiformate werden unterstützt?',
+        answer: 'Wir unterstützen alle gängigen Formate wie JPG, PNG, JPEG und WebP.'
+      },
+      {
+        question: 'Wie lange dauert es, ein Foto zu bearbeiten?',
+        answer: 'Dank unserer optimierten KI-Algorithmen dauert die Bearbeitung in der Regel weniger als 5 Sekunden.'
+      },
+      {
+        question: 'Kann ich mehrere Fotos gleichzeitig bearbeiten?',
+        answer: 'In unserer aktuellen Version bearbeiten wir Fotos einzeln, um maximale Präzision zu gewährleisten. Wir arbeiten jedoch ständig an neuen Funktionen.'
+      },
+      {
+        question: 'Wie speichere ich meine bearbeiteten Fotos?',
+        answer: 'Sobald die Bearbeitung abgeschlossen ist, können Sie auf die Schaltfläche "Herunterladen" klicken, um Ihr Foto mit transparentem Hintergrund im PNG-Format zu speichern.'
+      },
+      {
+        question: 'Gibt es eine mobile App für Hintergrund entfernen?',
+        answer: 'Hintergrund entfernen ist für die Nutzung im Web optimiert und funktioniert hervorragend auf allen mobilen Browsern, sodass keine App-Installation erforderlich ist.'
+      },
+      {
+        question: 'Sind meine hochgeladenen Fotos sicher?',
+        answer: 'Ja, Sicherheit hat bei uns oberste Priorität. Ihre Fotos werden verschlüsselt übertragen und nach der Bearbeitung automatisch von unseren Servern gelöscht.'
+      },
+      {
+        question: 'Wie kontaktiere ich den Support?',
+        answer: 'Wenn Sie Fragen oder Anregungen haben, können Sie unser Support-Team über das Kontaktformular auf unserer Website erreichen.'
+      }
+    ],
 
     // Buttons
     submit: 'Senden',
@@ -688,6 +881,20 @@ const translations = {
     accuracy: '99,9 % Genauigkeit',
     precisionAI: 'Präzisions-KI-Technologie liefert professionelle Ergebnisse',
     support: 'Support',
+    quality: 'Qualität',
+
+    // Auto Agent Page
+    aiAutoAgentTitle: 'KI Auto-Agent',
+    aiAutoAgentDescription: 'Laden Sie ein Bild hoch und geben Sie der KI Anweisungen in natürlicher Sprache. Unser intelligenter Agent analysiert Ihre Anfrage und führt die entsprechenden Bildverarbeitungsaufgaben aus.',
+    imagePreviewAlt: 'Vorschau',
+    remove: 'Entfernen',
+    clickToUpload: 'Klicken Sie zum Hochladen eines Bildes',
+    supportedFormats: 'PNG, JPG, JPEG (Max. 10MB)',
+    imageProcessedSuccessfully: 'Bild erfolgreich verarbeitet!',
+    errorProcessingImage: 'Fehler bei der Bildverarbeitung. Bitte versuchen Sie es erneut.',
+    selectValidImage: 'Bitte wählen Sie eine gültige Bilddatei aus',
+    selectImageFirst: 'Bitte wählen Sie zuerst ein Bild aus',
+    enterInstruction: 'Bitte geben Sie eine Anweisung ein',
   }
 };
 
@@ -702,17 +909,11 @@ export const useLanguage = () => {
 };
 
 export const LanguageProvider = ({ children }) => {
-  const [language, setLanguage] = useState(() => {
-    // Get language from localStorage or default to 'de' (German)
-    const savedLanguage = localStorage.getItem('language');
-    return savedLanguage || 'de';
-  });
+  const [language, setLanguage] = useState('de');
 
-  // Update localStorage when language changes
-  useEffect(() => {
-    localStorage.setItem('language', language);
-  }, [language]);
-
+  // Skip localStorage persistence to ensure German is always the default
+  // and no user-selected language overrides it.
+  
   const t = (key) => {
     const translation = translations[language]?.[key];
     return translation || key; // Fallback to the key if translation is not found
